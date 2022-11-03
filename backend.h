@@ -15,7 +15,17 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#define TAM 256
 
-
+typedef struct item {
+    int duracao;
+    int idItem;
+    char nomeItem[TAM];
+    char categoria[TAM];
+    int valorAtual; // pode tb ser valorInicial wtv
+    int valorCompreJa;
+    char sellerName[TAM];
+    char highestBidder[TAM];
+}ITEM;
 
 #endif //SO_BACKEND_H

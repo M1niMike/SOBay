@@ -38,13 +38,25 @@ void clear()
 char *interface(char cmd[50])
 {
 
+    char *token = strtok(cmd, " ");
+    int nPalavras = 0;
     printf("Comando: ");
     fflush(stdout);
     scanf("%s", cmd);
 
     if (strcmp(cmd, "sell") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 6){
+                printf("\nPor favor insira o seguinte:  <nome-item> <categoria> <preço-base> <preço-compre-já> <duração>\n");
+            }
+            else if (nPalavras == 6){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "list") == 0)
     {
@@ -52,23 +64,77 @@ char *interface(char cmd[50])
     }
     else if (strcmp(cmd, "licat") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 2){
+                printf("\nPor favor insira a categoria.\n");
+            }
+            else if (nPalavras == 2){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "lisel") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 2){
+                printf("\nPor favor insira o nome do vendedor.\n");
+            }
+            else if (nPalavras == 2){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "lival") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 2){
+                printf("\nPor favor insira o preco maximo do artigo.\n");
+            }
+            else if (nPalavras == 2){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "litime") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 2){
+                printf("\nPor favor insira o tempo restante (em segundos).\n");
+            }
+            else if (nPalavras == 2){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "time") == 0)
     {
         printf("\nA ser implementado\n");
+    }
+    else if (strcmp(cmd, "buy") == 0)
+    {
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 3){
+                printf("\nPor favor insira o seguinte: <id> <valor>\n");
+            }
+            else if (nPalavras == 3){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "cash") == 0)
     {
@@ -76,7 +142,17 @@ char *interface(char cmd[50])
     }
     else if (strcmp(cmd, "add") == 0)
     {
-        printf("\nA ser implementado\n");
+        while (token != NULL){
+            nPalavras++;
+            token = strtok(NULL, " ");
+            
+            if(nPalavras < 2){
+                printf("\nPor favor insira o montante que deseja adicionar.\n");
+            }
+            else if (nPalavras == 2){
+                printf("\nA ser implementado\n");
+            }
+        }
     }
     else if (strcmp(cmd, "exit") == 0)
     {
@@ -129,5 +205,4 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Comandos
 }
