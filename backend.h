@@ -17,7 +17,7 @@
 
 #define TAM 256
 
-typedef struct item {
+typedef struct item{
     int duracao;
     int idItem;
     char nomeItem[TAM];
@@ -26,13 +26,13 @@ typedef struct item {
     int valorCompreJa;
     char sellerName[TAM];
     char highestBidder[TAM];
-}ITEM;
+}ITEM, *ptritem;
 
-typedef struct user {
+typedef struct user{
     int pass;
     int saldo;
     char nome[TAM];
-    char mensagem[TAM]
-}USER;
+    char mensagem[TAM];
+}USER, *ptruser;
 
 #endif //SO_BACKEND_H
