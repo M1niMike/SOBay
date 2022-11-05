@@ -95,17 +95,16 @@ void clear()
     
 }
 
-void interface(char cmd[TAM])
+void interface()
 {
-    //char cmd[TAM];
+    char cmd[TAM];
     char primeiraPalavra[TAM];
 
     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
 
     fflush(stdin);
     printf("Comando: \n");
-    scanf(" %s", cmd);
-    //fgets(cmd, TAM, stdin);
+    fgets(cmd, TAM, stdin);
 
     char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
                                       // fflush(stdout);
@@ -113,14 +112,10 @@ void interface(char cmd[TAM])
     strcpy(primeiraPalavra, tokenfw);
     while (tokenfw != NULL)
     {
-        printf("{%s}", tokenfw);
         nPalavras++;
         tokenfw = strtok(NULL, " ");
         
     }
-
-    
-    printf("\n%d", nPalavras);
 
     if (strcmp(primeiraPalavra, "users") == 0)
     {
@@ -131,7 +126,7 @@ void interface(char cmd[TAM])
         }
         
     }
-    else if (strcmp(tokenfw, "list") == 0)
+    else if (strcmp(primeiraPalavra, "list") == 0)
     {
         if(nPalavras == 1){
             printf("\nA ser implementado...\n");
@@ -139,7 +134,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [list]\n");
         }
     }
-    else if (strcmp(tokenfw, "kick") == 0)
+    else if (strcmp(primeiraPalavra, "kick") == 0)
     {
         if(nPalavras == 2){
             printf("\nA ser implementado...\n");
@@ -147,7 +142,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [kick] [nomeUser]\n");
         }
     }
-    else if (strcmp(tokenfw, "prom") == 0)
+    else if (strcmp(primeiraPalavra, "prom") == 0)
     {
         if(nPalavras == 1){
             printf("\nA ser implementado...\n");
@@ -155,7 +150,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [prom]\n");
         }
     }
-    else if (strcmp(tokenfw, "reprom") == 0)
+    else if (strcmp(primeiraPalavra, "reprom") == 0)
     {
         if(nPalavras == 1){
             printf("\nA ser implementado...\n");
@@ -163,7 +158,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [reprom]\n");
         }
     }
-    else if (strcmp(tokenfw, "cancel") == 0)
+    else if (strcmp(primeiraPalavra, "cancel") == 0)
     {
         if(nPalavras == 2){
             printf("\nA ser implementado...\n");
@@ -171,7 +166,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [cancel] [nomePromotor]\n");
         }
     }
-    else if (strcmp(tokenfw, "close") == 0)
+    else if (strcmp(primeiraPalavra, "close") == 0)
     {
         if(nPalavras == 1 ){
              sair();
@@ -180,7 +175,7 @@ void interface(char cmd[TAM])
         }
        
     }
-    else if (strcmp(tokenfw, "help") == 0)
+    else if (strcmp(primeiraPalavra, "help") == 0)
     {
         if(nPalavras == 1 ){
              help();
@@ -188,7 +183,7 @@ void interface(char cmd[TAM])
             printf("\nInsira apenas [help]\n");
         }
     }
-    else if (strcmp(tokenfw, "clear") == 0)
+    else if (strcmp(primeiraPalavra, "clear") == 0)
     {
         if(nPalavras == 1 ){
              clear();
@@ -245,10 +240,9 @@ ptritem leFicheiroVendas(char *nomeFich)
 
 int main(int argc, char **argv)
 {
-    fflush(stdout);
 
-    char cmd[50];
-    char ms[50];
+    char cmd[TAM];
+    char ms[TAM];
     
     char nomeFich[TAM];
 
@@ -262,21 +256,25 @@ int main(int argc, char **argv)
     }
     // execPromotor();
 
+     printf("\n---Bem vindo Administrador---\n");
+
     while (1)
     {
 
-        printf("\n---Bem vindo!---\n");
-        printf("Desejar testar que funcionalidade?: comandos, execução do promotor, utilizadores, itens, sair\n");
-        scanf("%s", ms);
+       
+        printf("Deseja testar que funcionalidade?: <comandos> <promotor> <utilizadores> <itens> <sair>\n");
+        fgets(ms, TAM, stdin);
+        ms[strcspn(ms, "\n")] = 0; // strcspn conta os caracteres de uma string evitando o \n - set \n to 0
 
         if (strcmp(ms, "comandos") == 0)
         {
-            interface(cmd);
+            interface();
         }
         else if (strcmp(ms, "itens") == 0){
         
             printf("\nInsira o nome do ficheiro: \n");
-            scanf("%s", nomeFich);
+            fgets(nomeFich, TAM, stdin);
+            nomeFich[strcspn(nomeFich, "\n")] = 0;
 
            item = leFicheiroVendas(nomeFich);
         }

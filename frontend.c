@@ -37,170 +37,183 @@ void clear()
     // system("clear");
 }
 
-void interface(char cmd[TAM])
+void interface()
 {
     int nPalavras = 0;
-   // char cmd[TAM];
+    char cmd[TAM];
     printf("Comando: ");
     fgets(cmd, TAM, stdin);
-    //scanf("%s", cmd);
-    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+
+    char *token = strtok(cmd, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     fflush(stdout);
 
-    //fflush(stdin);
+    // fflush(stdin);
 
     // printf("\n%s", cmd);
 
-    // char primeiraPalavra[TAM];
-    // strcpy(primeiraPalavra, token);
+    char primeiraPalavra[TAM];
+    strcpy(primeiraPalavra, token);
 
-    token = strtok(cmd, " \n");
+    while (token != NULL)
+    {
+        nPalavras++;
+        token = strtok(NULL, " ");
+    }
 
-    if (strcmp(token, "sell") == 0)
+    if (strcmp(primeiraPalavra, "sell") == 0)
     {
-        while (token != NULL)
+        if (nPalavras == 6)
         {
+            printf("\nA ser implementado...\n");
+        }
+        else
+        {
+            printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
+        }
+    }
+    else if (strcmp(primeiraPalavra, "list") == 0)
+    {
 
-            
-            token = strtok(NULL, " ");
-            nPalavras++;
-            printf("%d", nPalavras);
+        if (nPalavras == 1)
+        {
+            printf("\nA ser implementado...\n");
         }
+        else
+        {
+            printf("\nInsira apenas [list]\n");
+        }
+    }
+    else if (strcmp(primeiraPalavra, "licat") == 0)
+    {
 
-        if (nPalavras < 6)
+        if (nPalavras == 2)
         {
-            printf("\nPor favor insira o seguinte:  <nome-item> <categoria> <preço-base> <preço-compre-já> <duração>\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 6)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [licat nomeCategoria]\n");
         }
     }
-    else if (strcmp(cmd, "list") == 0)
+    else if (strcmp(primeiraPalavra, "lisel") == 0)
     {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "licat") == 0)
-    {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 2)
+        if (nPalavras == 2)
         {
-            printf("\nPor favor insira a categoria.\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 2)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [lisel nomeVendedor]\n");
         }
     }
-    else if (strcmp(cmd, "lisel") == 0)
+    else if (strcmp(primeiraPalavra, "lival") == 0)
     {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 2)
+        if (nPalavras == 2)
         {
-            printf("\nPor favor insira o nome do vendedor.\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 2)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [lival precoMaximo]\n");
         }
     }
-    else if (strcmp(cmd, "lival") == 0)
+    else if (strcmp(primeiraPalavra, "litime") == 0)
     {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 2)
+        if (nPalavras == 2)
         {
-            printf("\nPor favor insira o preco maximo do artigo.\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 2)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [litime prazo]\n");
         }
     }
-    else if (strcmp(cmd, "litime") == 0)
+    else if (strcmp(primeiraPalavra, "time") == 0)
     {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 2)
+        if (nPalavras == 1)
         {
-            printf("\nPor favor insira o tempo restante (em segundos).\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 2)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [time]\n");
         }
     }
-    else if (strcmp(cmd, "time") == 0)
+    else if (strcmp(primeiraPalavra, "buy") == 0)
     {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "buy") == 0)
-    {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 3)
+        if (nPalavras == 3)
         {
-            printf("\nPor favor insira o seguinte: <id> <valor>\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 3)
+        else
         {
-            printf("\nA ser implementado\n");
+            printf("\nInsira apenas [buy id valor]\n");
         }
     }
-    else if (strcmp(cmd, "cash") == 0)
+    else if (strcmp(primeiraPalavra, "cash") == 0)
     {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "add") == 0)
-    {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
 
-        if (nPalavras < 2)
+        if (nPalavras == 1)
         {
-            printf("\nPor favor insira o montante que deseja adicionar.\n");
+            printf("\nA ser implementado...\n");
         }
-        else if (nPalavras == 2)
+        else
         {
-            printf("\nMontante registado! A ser implementado\n");
+            printf("\nInsira apenas [cash]\n");
         }
     }
-    else if (strcmp(cmd, "exit") == 0)
+    else if (strcmp(primeiraPalavra, "add") == 0)
     {
-        sair();
+
+        if (nPalavras == 2)
+        {
+            printf("\nA ser implementado...\n");
+        }
+        else
+        {
+            printf("\nInsira apenas [add valor]\n");
+        }
     }
-    else if (strcmp(cmd, "help") == 0)
+    else if (strcmp(primeiraPalavra, "exit") == 0)
     {
-        help();
+
+        if (nPalavras == 1)
+        {
+            sair();
+        }
+        else
+        {
+            printf("\nInsira apenas [exit]\n");
+        }
     }
-    else if (strcmp(cmd, "clear") == 0)
+    else if (strcmp(primeiraPalavra, "help") == 0)
     {
-        clear();
+
+        if (nPalavras == 1)
+        {
+            help();
+        }
+        else
+        {
+            printf("\nInsira apenas [help]\n");
+        }
+    }
+    else if (strcmp(primeiraPalavra, "clear") == 0)
+    {
+
+        if (nPalavras == 1)
+        {
+            clear();
+        }
+        else
+        {
+            printf("\nInsira apenas [clear]\n");
+        }
     }
     else
     {
