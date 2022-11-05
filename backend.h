@@ -28,4 +28,11 @@ typedef struct item {
     char highestBidder[TAM];
 }ITEM;
 
+typedef struct user {
+    int pass;
+    int saldo;
+    char nome[TAM];
+    char mensagem[TAM]
+}USER;
+
 #endif //SO_BACKEND_H

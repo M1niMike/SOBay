@@ -1,65 +1,55 @@
 #include "frontend.h"
 #include "backend.h"
 
-// Unamed Pipes - Promotor
-//  void lePipes(){
+int saldo = 10;
 
-//     int FD_BC[2];
-//     int FD_CB[2];
+void execPromotor(){
+    USER user;
+    int fd[2];
+    char msgVolta[TAM];
+    pipe(fd);
+    char resposta[TAM];
 
-//     char str[50];
-//     char volta[50];
+    int id = fork();
 
-//     pipe(FD_BC);
-//     pipe(FD_CB);
+    if (id == -1){
+        printf("\nFalha na execucao do fork()");
+        return;
+    }
 
-//     int id = fork();
+    if(id > 0){
+        printf("\nEntrei no pai!");
+        close(0); // fecha stdin
+        dup(fd[0]); // duplica o fd para conseguir ler o que esta no pipe
+        close(fd[0]); // fecha porque nao estamos a usar
+        close(fd[1]); // fecha o de escrita tambem
+        close(1); // fecha o stdout
+        wait(&id);     // espera para que o filho acabe
+        execl("./promotor", "./promotor", NULL);
+    }
+    else if(id == 0){
+        printf("\nEntrei no filho!");
+        printf("\nInsira a sua mensagem:\n");
+        fgets(resposta, TAM, stdin);
+        close(1); // mesmo conceito aqui, fecha o stdout
+        dup(fd[1]); // duplica para a escrita
+        write(fd[1], resposta, TAM); // escreve para a ponta de leitura
+        close(fd[1]); // fecha que nao estamos a usar
+        read(fd[0], msgVolta, TAM); // le no 0 pq é a ponta para ler
+        close(fd[0]); // fecha porque já não estamos a usar
 
-//     if (id > 0){
-//         close(FD_BC[0]);
+        printf("\nRecebi do promotor: ", msgVolta);
+    }
+}
 
-//         printf("\nIndique os seus sintomas\n");
-//         fgets(str, 49, stdin);
+//quando tivermos o ficheiro dos users:
 
-//         write(FD_BC[1], str, 49);
-//         close(FD_CB[1]);
-//         read(FD_CB[0], volta , 50);
-//         close(FD_CB[0]);
+void testaUsers(USER user){ // um set para o saldo do utilizador
+    saldo--;
+    user.saldo = saldo;
+}
 
-//         printf("recebeu do classificador: %s\n", volta);
-
-//     }
-
-//     else if (id == 0){
-//         close(STDIN_FILENO);
-
-//         dup(FD_BC[0]); // para duplicar o file descriptor, ligando-o ao primeiro fd vazio
-
-//         close(FD_BC[0]);
-//         close(FD_BC[1]);
-//         close(STDOUT_FILENO);
-
-//         dup(FD_CB[1]);
-
-//         close(FD_CB[1]);
-//         close(FD_CB[0]);
-
-//         execl("./classificador", "classificador", NULL);
-
-//     }
-//     else{
-//         printf("Falha na criacao do fork()");
-
-//         exit(EXIT_FAILURE);
-//     }
-
-// }
-
-void help()
-{
-
-    // printf("MAXMEDICOS: 5\n");
-    // printf("MAXCLIENTES: 5\n");
+void help(){
     printf("---------------------\n");
     printf("COMANDOS\n");
     printf("[users]  - \n");
@@ -87,12 +77,13 @@ void clear()
 
 char *interface(char cmd[50])
 {
-    char* token = strtok(cmd, " ");
     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
     printf("Comando: ");
-    scanf("%s", cmd);
-    fflush(stdout);
+    fgets(cmd, TAM, stdin);
+    char* token = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
     fflush(stdin);
+    fflush(stdout);
+    
 
     if (strcmp(cmd, "users") == 0)
     {
@@ -107,13 +98,13 @@ char *interface(char cmd[50])
         while (token != NULL){
             nPalavras++;
             token = strtok(NULL, " ");
-            
-            if(nPalavras < 2){
-                printf("\nPor favor insira o nome do utilizador a ser kickado.\n");
-            }
-            else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
-            }
+        }
+
+        if(nPalavras < 2){
+            printf("\nPor favor insira o nome do utilizador a ser kickado.\n");
+        }
+        else if (nPalavras == 2){
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "prom") == 0)
@@ -129,13 +120,13 @@ char *interface(char cmd[50])
         while (token != NULL){
             nPalavras++;
             token = strtok(NULL, " ");
-            
-            if(nPalavras < 2){
-                printf("\nPor favor insira o nome do executavel.\n");
-            }
-            else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
-            }
+        }
+
+        if(nPalavras < 2){
+            printf("\nPor favor insira o nome do executavel.\n");
+        }
+        else if (nPalavras == 2){
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "close") == 0)
@@ -163,7 +154,6 @@ void leFicheiroVendas(char* nomeFich){
     char linha[150];
     ITEM item;
     FILE *f = fopen(nomeFich, "r");
-    int i = 0;
 
     if (f == NULL){
         printf("\nNao foi possivel abrir ficheiro [%s]!\n", nomeFich);
@@ -173,16 +163,8 @@ void leFicheiroVendas(char* nomeFich){
     printf("\nA ler info de ficheiro: [%s]\n", nomeFich);
 
     while (fscanf(f, "%d %s %s %d %d %d %s %s", &item.idItem, item.nomeItem, item.categoria, &item.valorAtual, &item.valorCompreJa, &item.duracao, item.sellerName, item.highestBidder) != EOF){
-       
-       if (i==0){
-       printf("\n...............ITEM 1...............\n");
-       }
 
-       i++;
-
-       if(i > 1){
-        printf("\n...............ITEM %d...............\n", i);
-       }
+       printf("\n...............ITEM %d...............\n", item.idItem);
        
        printf("\nID do item: %d\n", item.idItem);
        printf("Nome do item: %s\n", item.nomeItem);
@@ -194,8 +176,26 @@ void leFicheiroVendas(char* nomeFich){
        printf("Licitador mais elevado: %s\n", item.highestBidder); 
     }
 
+    fclose(f);
+}
 
-    /*fseek(f, 0, SEEK_END); // ir até ao fim do ficheiro
+int main(int argc, char **argv)
+{
+    char cmd[50];
+    leFicheiroVendas("vendas.txt");
+
+    execPromotor();
+
+    while (1){
+        interface(cmd);
+    }
+    return 0;
+}
+
+
+//PARA RELEMBRAR, TAM DE FICHEIROS
+
+/*fseek(f, 0, SEEK_END); // ir até ao fim do ficheiro
 
     int tam = ftell(f); // associar o tamanho do ficheiro (que esta no fim) a uma var
 
@@ -210,23 +210,3 @@ void leFicheiroVendas(char* nomeFich){
     /*for (int i = 0; i < 15; i++){
         valorFich[i] = atoi(linha);
     }*/
-
-    fclose(f);
-}
-
-int main(int argc, char **argv)
-{
-    char cmd[50];
-    // varAmb();
-    // lePipes();
-
-    // Comandos
-
-    leFicheiroVendas("vendas.txt");
-
-    while (1){
-        interface(cmd);
-    }
-
-    return 0;
-}
