@@ -95,90 +95,106 @@ void clear()
     
 }
 
-void interface()
+void interface(char cmd[TAM])
 {
-    char cmd[TAM];
+    //char cmd[TAM];
+    char primeiraPalavra[TAM];
 
     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
 
     fflush(stdin);
     printf("Comando: \n");
-    scanf("%s", cmd);
+    scanf(" %s", cmd);
+    //fgets(cmd, TAM, stdin);
 
-    char *token = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
+    char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
                                       // fflush(stdout);
 
-    while (token != NULL)
+    strcpy(primeiraPalavra, tokenfw);
+    while (tokenfw != NULL)
     {
+        printf("{%s}", tokenfw);
         nPalavras++;
-        token = strtok(NULL, " ");
+        tokenfw = strtok(NULL, " ");
+        
     }
 
-    if (strcmp(cmd, "users") == 0)
-    {
-        printf("\nA ser implementado...\n");
-    }
-    else if (strcmp(cmd, "list") == 0)
-    {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "kick") == 0)
-    {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
-        }
+    
+    printf("\n%d", nPalavras);
 
-        if (nPalavras < 2)
-        {
-            printf("\nPor favor insira o nome do utilizador a ser kickado.\n");
-        }
-        else if (nPalavras == 2)
-        {
-            printf("\nA ser implementado\n");
-        }
-    }
-    else if (strcmp(cmd, "prom") == 0)
+    if (strcmp(primeiraPalavra, "users") == 0)
     {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "reprom") == 0)
-    {
-        printf("\nA ser implementado\n");
-    }
-    else if (strcmp(cmd, "cancel") == 0)
-    {
-        while (token != NULL)
-        {
-            nPalavras++;
-            token = strtok(NULL, " ");
+        if(nPalavras == 1){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [users]\n");
         }
-
-        if (nPalavras < 2)
-        {
-            printf("\nPor favor insira o nome do executavel.\n");
-        }
-        else if (nPalavras == 2)
-        {
-            printf("\nA ser implementado\n");
+        
+    }
+    else if (strcmp(tokenfw, "list") == 0)
+    {
+        if(nPalavras == 1){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [list]\n");
         }
     }
-    else if (strcmp(cmd, "close") == 0)
+    else if (strcmp(tokenfw, "kick") == 0)
     {
-        sair();
+        if(nPalavras == 2){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [kick] [nomeUser]\n");
+        }
     }
-    else if (strcmp(cmd, "help") == 0)
+    else if (strcmp(tokenfw, "prom") == 0)
     {
-        help();
+        if(nPalavras == 1){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [prom]\n");
+        }
     }
-    else if (strcmp(cmd, "clear") == 0)
+    else if (strcmp(tokenfw, "reprom") == 0)
     {
-        clear();
+        if(nPalavras == 1){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [reprom]\n");
+        }
     }
-    else if (strcmp(cmd, "comandos") == 0)
+    else if (strcmp(tokenfw, "cancel") == 0)
     {
-        printf("\nEntrei");
+        if(nPalavras == 2){
+            printf("\nA ser implementado...\n");
+        }else{
+            printf("\nInsira apenas [cancel] [nomePromotor]\n");
+        }
+    }
+    else if (strcmp(tokenfw, "close") == 0)
+    {
+        if(nPalavras == 1 ){
+             sair();
+        }else{
+            printf("\nInsira apenas [close]\n");
+        }
+       
+    }
+    else if (strcmp(tokenfw, "help") == 0)
+    {
+        if(nPalavras == 1 ){
+             help();
+        }else{
+            printf("\nInsira apenas [help]\n");
+        }
+    }
+    else if (strcmp(tokenfw, "clear") == 0)
+    {
+        if(nPalavras == 1 ){
+             clear();
+        }else{
+            printf("\nInsira apenas [clear]\n");
+        }
     }
     else
     {
@@ -255,9 +271,7 @@ int main(int argc, char **argv)
 
         if (strcmp(ms, "comandos") == 0)
         {
-
-            printf("%s", ms);
-            interface();
+            interface(cmd);
         }
         else if (strcmp(ms, "itens") == 0){
         

@@ -37,27 +37,34 @@ void clear()
     // system("clear");
 }
 
-void interface()
+void interface(char cmd[TAM])
 {
     int nPalavras = 0;
-    char cmd[TAM];
+   // char cmd[TAM];
     printf("Comando: ");
-    scanf("%s", cmd);
-    char *token = strtok(cmd, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+    fgets(cmd, TAM, stdin);
+    //scanf("%s", cmd);
+    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     fflush(stdout);
-    fflush(stdin);
+
+    //fflush(stdin);
 
     // printf("\n%s", cmd);
 
     // char primeiraPalavra[TAM];
     // strcpy(primeiraPalavra, token);
 
-    if (strcmp(cmd, "sell") == 0)
+    token = strtok(cmd, " \n");
+
+    if (strcmp(token, "sell") == 0)
     {
         while (token != NULL)
         {
-            nPalavras++;
+
+            
             token = strtok(NULL, " ");
+            nPalavras++;
+            printf("%d", nPalavras);
         }
 
         if (nPalavras < 6)
@@ -204,7 +211,7 @@ void interface()
 int main(int argc, char **argv)
 {
 
-    char cmd[50];
+    char cmd[TAM];
     char password[50];
     char username[50];
     USER *user;
@@ -235,7 +242,7 @@ int main(int argc, char **argv)
 
         while (1)
         {
-            interface();
+            interface(cmd);
         }
     }
     else if (argc < 3)
