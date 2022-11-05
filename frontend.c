@@ -1,7 +1,8 @@
 #include "frontend.h"
 #include "backend.h"
 
-void help(){
+void help()
+{
     printf("---------------------\n");
     printf("COMANDOS\n");
     printf("[sell <nome-item> <categoria> <preco-base> <preco-compre-ja> <duracao>]  - \n");
@@ -28,34 +29,44 @@ void sair()
 
 void clear()
 {
-    system("clear");
+    for (int i = 0; i < 30; i++)
+    {
+        printf("\n");
+    }
+
+    // system("clear");
 }
 
-char *interface(char cmd[50])
+void interface()
 {
     int nPalavras = 0;
+    char cmd[TAM];
     printf("Comando: ");
-    fgets(cmd, TAM, stdin);
+    scanf("%s", cmd);
     char *token = strtok(cmd, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     fflush(stdout);
     fflush(stdin);
 
-    //printf("\n%s", cmd);
+    // printf("\n%s", cmd);
 
-    //char primeiraPalavra[TAM];
-    //strcpy(primeiraPalavra, token);
+    // char primeiraPalavra[TAM];
+    // strcpy(primeiraPalavra, token);
 
     if (strcmp(cmd, "sell") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 6){
-                printf("\nPor favor insira o seguinte:  <nome-item> <categoria> <preço-base> <preço-compre-já> <duração>\n");
-        } else if (nPalavras == 6){
-                printf("\nA ser implementado\n");
+        if (nPalavras < 6)
+        {
+            printf("\nPor favor insira o seguinte:  <nome-item> <categoria> <preço-base> <preço-compre-já> <duração>\n");
+        }
+        else if (nPalavras == 6)
+        {
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "list") == 0)
@@ -64,59 +75,71 @@ char *interface(char cmd[50])
     }
     else if (strcmp(cmd, "licat") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 2){
-                printf("\nPor favor insira a categoria.\n");
+        if (nPalavras < 2)
+        {
+            printf("\nPor favor insira a categoria.\n");
         }
-        else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
+        else if (nPalavras == 2)
+        {
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "lisel") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 2){
-                printf("\nPor favor insira o nome do vendedor.\n");
-            }
-            else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
-            }
+        if (nPalavras < 2)
+        {
+            printf("\nPor favor insira o nome do vendedor.\n");
+        }
+        else if (nPalavras == 2)
+        {
+            printf("\nA ser implementado\n");
+        }
     }
     else if (strcmp(cmd, "lival") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 2){
-                printf("\nPor favor insira o preco maximo do artigo.\n");
-            }
-        else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
+        if (nPalavras < 2)
+        {
+            printf("\nPor favor insira o preco maximo do artigo.\n");
+        }
+        else if (nPalavras == 2)
+        {
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "litime") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 2){
-                printf("\nPor favor insira o tempo restante (em segundos).\n");
-            }
-            else if (nPalavras == 2){
-                printf("\nA ser implementado\n");
-            }
+        if (nPalavras < 2)
+        {
+            printf("\nPor favor insira o tempo restante (em segundos).\n");
+        }
+        else if (nPalavras == 2)
+        {
+            printf("\nA ser implementado\n");
+        }
     }
     else if (strcmp(cmd, "time") == 0)
     {
@@ -124,16 +147,19 @@ char *interface(char cmd[50])
     }
     else if (strcmp(cmd, "buy") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 3){
-                printf("\nPor favor insira o seguinte: <id> <valor>\n");
+        if (nPalavras < 3)
+        {
+            printf("\nPor favor insira o seguinte: <id> <valor>\n");
         }
-        else if (nPalavras == 3){
-                printf("\nA ser implementado\n");
+        else if (nPalavras == 3)
+        {
+            printf("\nA ser implementado\n");
         }
     }
     else if (strcmp(cmd, "cash") == 0)
@@ -142,16 +168,19 @@ char *interface(char cmd[50])
     }
     else if (strcmp(cmd, "add") == 0)
     {
-        while (token != NULL){
+        while (token != NULL)
+        {
             nPalavras++;
             token = strtok(NULL, " ");
         }
 
-        if(nPalavras < 2){
-                printf("\nPor favor insira o montante que deseja adicionar.\n");
+        if (nPalavras < 2)
+        {
+            printf("\nPor favor insira o montante que deseja adicionar.\n");
         }
-        else if (nPalavras == 2){
-                printf("\nMontante registado! A ser implementado\n");
+        else if (nPalavras == 2)
+        {
+            printf("\nMontante registado! A ser implementado\n");
         }
     }
     else if (strcmp(cmd, "exit") == 0)
@@ -170,8 +199,6 @@ char *interface(char cmd[50])
     {
         printf("\nComando invalido!\n");
     }
-
-    return cmd;
 }
 
 int main(int argc, char **argv)
@@ -180,18 +207,27 @@ int main(int argc, char **argv)
     char cmd[50];
     char password[50];
     char username[50];
-    USER user;
+    USER *user;
+
+    user = malloc(sizeof(USER));
+    if (user == NULL)
+    {
+        printf("\nErro na alocacao de memoria [USER] \n");
+        free(user);
+        return -1;
+    }
 
     // varAmb();
     // lePipes();
 
-    if (argc >= 3){
+    if (argc == 3)
+    {
 
-        strcpy(user.nome, argv[1]);
-        
-        user.pass = atoi(argv[2]);
+        strcpy(user->nome, argv[1]);
 
-        printf("\nNome do user: %s\n", user.nome);
+        user->pass = atoi(argv[2]);
+
+        printf("\nNome do user: %s\n", user->nome);
 
         printf("\n\nSenha registada!\n");
 
@@ -199,15 +235,20 @@ int main(int argc, char **argv)
 
         while (1)
         {
-            interface(cmd);
+            interface();
         }
-
-        return 0;
-
-    }else{
-        printf("\n\n Insira seu username e password apos './frontend'\n");
-        return 1;
     }
+    else if (argc < 3)
+    {
+        printf("\n\n Insira seu username e password apos './frontend'\n");
+    }
+    else
+    {
+        printf("\n\n Demasiados argumentos, insira apenas 3 [./frontend nome pass]\n");
+        return -2;
+    }
+
+    return 0;
 
     // Comandos
 }

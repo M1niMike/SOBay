@@ -89,7 +89,10 @@ void sair()
 
 void clear()
 {
-    system("clear");
+    for(int i = 0; i < 30; i++){
+        printf("\n");
+    }
+    
 }
 
 void interface()
@@ -227,7 +230,7 @@ ptritem leFicheiroVendas(char *nomeFich)
 int main(int argc, char **argv)
 {
     fflush(stdout);
-    
+
     char cmd[50];
     char ms[50];
     
