@@ -19,32 +19,17 @@ void execPromotor()
         return;
     }
 
-    if (id > 0)
-    {
-        printf("\nEntrei no pai!");
-        close(0);     // fecha stdin
-        dup(fd[0]);   // duplica o fd para conseguir ler o que esta no pipe
-        close(fd[0]); // fecha porque nao estamos a usar
-        close(fd[1]); // fecha o de escrita tambem
-        close(1);     // fecha o stdout
-        wait(&id);    // espera para que o filho acabe
-        execl("./promotor", "promotor", NULL);
+    if(id > 0){
+        read(fd[0], resposta, sizeof(resposta));
+        close(fd[1]);
+        printf("%s", resposta);
     }
-    else if (id == 0)
-    {
-
-        printf("\nEntrei no filho!");
-        printf("\nInsira a sua mensagem:\n");
-        fgets(resposta, TAM, stdin);
-        printf("\nSua resposta: {%s}", resposta);
-        close(1);                    // mesmo conceito aqui, fecha o stdout
-        dup(fd[1]);                  // duplica para a escrita
-        write(fd[1], resposta, TAM); // escreve para a ponta de leitura
-        close(fd[1]);                // fecha que nao estamos a usar
-        read(fd[0], msgVolta, TAM);  // le no 0 pq é a ponta para ler
-        close(fd[0]);                // fecha porque já não estamos a usar
-
-        printf("\nRecebi do promotor: ", msgVolta);
+    else if(id == 0){
+        close(1);
+        dup(fd[1]);
+        close(fd[0]);
+        close(fd[1]);
+        execl("./promotor", "./promotor", NULL);
     }
 }
 
@@ -286,8 +271,8 @@ int main(int argc, char **argv)
         else if (strcmp(ms, "promotor") == 0)
         {
 
-            printf("\nA ser implementado\n");
-            // execPromotor();
+            //printf("\nA ser implementado\n");
+            execPromotor();
         }
         else if (strcmp(ms, "sair") == 0)
         {

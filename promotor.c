@@ -8,10 +8,21 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "backend.h"
 
 int main(){
 
-    printf("\nTeste\n");
+    USER *user;
+
+    user = malloc(sizeof(USER));
+
+    if (user == NULL){
+        printf("\nFalha na alocacao de memoria!\n");
+        free(user);
+        return -1;
+    }
+
+    printf("\nOla bom dia\n");
 
     return 0;
 }
