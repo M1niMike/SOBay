@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
         strcpy(user->nome, argv[1]);
 
-        user->pass = atoi(argv[2]);
+        strcpy(user->pass, argv[2]);
 
         printf("\nNome do user: %s\n", user->nome);
 

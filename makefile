@@ -11,17 +11,16 @@ frontend:
 backend:
 	gcc backend.c backend.h users_lib.o -o backend
 
+rmfrontend:
+	rm frontend
 
-rmall:
+rmbackend:
+	rm backend
+
+clean:
 	rm backend	
 	rm frontend
 
-
-rmbackend:
-	rm backend	
-
-rmfrontend:
-	rm frontend	
 	
 
 
