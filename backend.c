@@ -1,5 +1,6 @@
 #include "frontend.h"
 #include "backend.h"
+#include "users_lib.h"
 
 int saldo = 10;
 
@@ -29,7 +30,7 @@ void execPromotor()
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
-        execl("./promotor", "./promotor", NULL);
+        execl("./promotores/promotor", "./promotor", NULL);
     }
 }
 
@@ -245,8 +246,6 @@ int main(int argc, char **argv)
 
     while (1)
     {
-
-       
         printf("Deseja testar que funcionalidade?: <comandos> <promotor> <utilizadores> <itens> <sair>\n");
         fgets(ms, TAM, stdin);
         ms[strcspn(ms, "\n")] = 0; // strcspn conta os caracteres de uma string evitando o \n - set \n to 0
@@ -266,12 +265,21 @@ int main(int argc, char **argv)
         else if (strcmp(ms, "utilizadores") == 0)
         {
 
-            printf("\nA ser implementado\n");
+            // users_lib.h -- teste funçoes
+            loadUsersFile("users.txt");
+
+            int i = getUserBalance("mike");
+
+            printf("\n[%d]\n", i);
+
+            updateUserBalance("mike", 500);
+
+            saveUsersFile("users.txt");
+
+            printf("\n[%d]\n", i);
         }
         else if (strcmp(ms, "promotor") == 0)
         {
-
-            //printf("\nA ser implementado\n");
             execPromotor();
         }
         else if (strcmp(ms, "sair") == 0)
