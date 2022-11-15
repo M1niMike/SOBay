@@ -1,13 +1,12 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # GNU Make 4.3
- 
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Nov 14 21:20:17 2022
+# Make data base, printed on Tue Nov 15 21:29:49 2022
 
 # Variables
 
@@ -29,8 +28,6 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 PWD = /home/micael/SO/SO-TP-22-23
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
-# environment
-OLDPWD = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # automatic
@@ -94,7 +91,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 54576 22
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 57282 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -120,7 +117,7 @@ _ = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b/nod
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-9acfcd73-9018-40aa-9eff-58488bf0fa01.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-31d06250-fdce-4c70-920e-6c49e56de95a.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -140,9 +137,9 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 54576 fe80::a00:27ff:fed1:32f%enp0s8 22
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 57282 fe80::a00:27ff:fed1:32f%enp0s8 22
 # variable set hash-table stats:
-# Load=65/1024=6%, Rehash=0, Collisions=1/98=1%
+# Load=64/1024=6%, Rehash=0, Collisions=1/97=1%
 
 # Pattern-specific Variable Values
 
@@ -259,6 +256,6 @@ frontend:
 # strcache performance: lookups = 40 / hit rate = 35%
 # hash-table stats:
 # Load=26/8192=0%, Rehash=0, Collisions=0/40=0%
-# Finished Make data base on Mon Nov 14 21:20:17 2022
+# Finished Make data base on Tue Nov 15 21:29:49 2022
 
  

@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     char cmd[TAM];
     char password[50];
     char username[50];
-    USER *user;
+    ptruser user;
 
     user = malloc(sizeof(USER));
     if (user == NULL)

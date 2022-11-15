@@ -2,11 +2,8 @@
 #include "backend.h"
 #include "users_lib.h"
 
-int saldo = 10;
-
 void execPromotor()
 {
-    USER user;
     int fd[2];
     char msgVolta[TAM];
     pipe(fd);
@@ -23,33 +20,18 @@ void execPromotor()
     if(id > 0){
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
-        printf("%s", resposta);
+        printf("\n%s\n", resposta);
     }
     else if(id == 0){
         close(1);
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
-        execl("./promotores/promotor", "./promotor" , NULL);
+        execl("./promotores/black_friday", "./black_friday" , NULL);
+        
     }
 }
 
-// quando tivermos o ficheiro dos users:
-
-void testaUsers(USER *user)
-{ // um set para o saldo do utilizador
-
-    user = malloc(sizeof(USER));
-
-    if(user == NULL){
-        printf("Erro na alocacao de memoria\n");
-        free(user);
-        return;
-    }
-
-    saldo--;
-    user->saldo = saldo;
-}
 
 void help()
 {
@@ -185,7 +167,6 @@ void interface()
 
 ptritem leFicheiroVendas(char *nomeFich)
 {
-    char linha[150];
     ptritem item;
     FILE *f = fopen(nomeFich, "r");
     int i = 0;
@@ -231,8 +212,6 @@ ptritem leFicheiroVendas(char *nomeFich)
 }
 
 ptruser leFicheiroUsers(ptruser user ,char * nomeFicheiro, int quant){
-
-    char linha[150];
 
     int i = 0;
     FILE *f = fopen(nomeFicheiro, "r");
