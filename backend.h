@@ -29,7 +29,7 @@ typedef struct item{
 }ITEM, *ptritem;
 
 typedef struct user{
-    int pass;
+    char pass[TAM];
     int saldo;
     char nome[TAM];
     char mensagem[TAM];

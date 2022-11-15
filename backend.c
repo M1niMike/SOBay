@@ -1,11 +1,9 @@
 #include "frontend.h"
 #include "backend.h"
-
-int saldo = 10;
+#include "users_lib.h"
 
 void execPromotor()
 {
-    USER user;
     int fd[2];
     char msgVolta[TAM];
     pipe(fd);
@@ -22,33 +20,18 @@ void execPromotor()
     if(id > 0){
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
-        printf("%s", resposta);
+        printf("\n%s\n", resposta);
     }
     else if(id == 0){
         close(1);
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
-        execl("./promotor", "./promotor", NULL);
+        execl("./promotores/black_friday", "./black_friday" , NULL);
+        
     }
 }
 
-// quando tivermos o ficheiro dos users:
-
-void testaUsers(USER *user)
-{ // um set para o saldo do utilizador
-
-    user = malloc(sizeof(USER));
-
-    if(user == NULL){
-        printf("Erro na alocacao de memoria\n");
-        free(user);
-        return;
-    }
-
-    saldo--;
-    user->saldo = saldo;
-}
 
 void help()
 {
@@ -184,11 +167,11 @@ void interface()
 
 ptritem leFicheiroVendas(char *nomeFich)
 {
-    char linha[150];
-    ITEM *item;
+    ptritem item;
     FILE *f = fopen(nomeFich, "r");
+    int i = 0;
 
-    item = malloc(sizeof(ITEM));
+    item = malloc(30 * sizeof(ITEM));
     if(item == NULL){
         printf("Erro na alocacao de memoria\n");
         free(item);
@@ -203,24 +186,68 @@ ptritem leFicheiroVendas(char *nomeFich)
 
     printf("\nA ler info de ficheiro: [%s]\n", nomeFich);
 
-    while (fscanf(f, "%d %s %s %d %d %d %s %s", &item->idItem, item->nomeItem, item->categoria, &item->valorAtual, &item->valorCompreJa, &item->duracao, item->sellerName, item->highestBidder) != EOF)
+    while (fscanf(f, "%d %s %s %d %d %d %s %s", &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
     {
 
-        printf("\n...............ITEM %d...............\n", item->idItem);
+        printf("\n...............ITEM %d...............\n", item[i].idItem);
 
-        printf("\nID do item: %d\n", item->idItem);
-        printf("Nome do item: %s\n", item->nomeItem);
-        printf("Categoria: %s\n", item->categoria);
-        printf("Valor atual do item: %d\n", item->valorAtual);
-        printf("Valor Compre Ja: %d\n", item->valorCompreJa);
-        printf("Duracao do leilao: %d\n", item->duracao);
-        printf("Vendedor: %s\n", item->sellerName);
-        printf("Licitador mais elevado: %s\n", item->highestBidder);
+        printf("\nID do item: %d\n", item[i].idItem);
+        printf("Nome do item: %s\n", item[i].nomeItem);
+        printf("Categoria: %s\n", item[i].categoria);
+        printf("Valor atual do item: %d\n", item[i].valorAtual);
+        printf("Valor Compre Ja: %d\n", item[i].valorCompreJa);
+        printf("Duracao do leilao: %d\n", item[i].duracao);
+        printf("Vendedor: %s\n", item[i].sellerName);
+        printf("Licitador mais elevado: %s\n", item[i].highestBidder);
+
+        i++;
+
     }
+
+    
 
     fclose(f);
 
     return item;
+}
+
+ptruser leFicheiroUsers(ptruser user ,char * nomeFicheiro, int quant){
+
+    int i = 0;
+    FILE *f = fopen(nomeFicheiro, "r");
+
+    user = malloc(quant*sizeof(USER));
+    if(user == NULL){
+        printf("Erro na alocacao de memoria\n");
+        free(user);
+        return NULL;
+    }
+
+    if (f == NULL)
+    {
+        printf("\nNao foi possivel abrir ficheiro [%s]!\n", nomeFicheiro);
+        return NULL;
+    }
+    printf("\nA ler info de ficheiro: [%s]\n", nomeFicheiro);
+
+    while (fscanf(f, "%s %s %d", user[i].nome, user[i].pass, &(user[i].saldo)) != EOF)
+    {
+
+        printf("\n...............User %s...............\n", user[i].nome);
+
+        printf("Nome do user: %s\n", user[i].nome);
+        printf("Password do user: %s\n", user[i].pass);
+        printf("Saldo do user: %d\n", user[i].saldo);
+
+        i++;
+    }
+
+  
+
+    fclose(f);
+
+    return user;
+
 }
 
 int main(int argc, char **argv)
@@ -232,21 +259,12 @@ int main(int argc, char **argv)
     char nomeFich[TAM];
 
     ptritem item;
-
-    item = malloc(sizeof(ITEM));
-    if(item == NULL){
-        printf("Erro na alocacao de memoria\n");
-        free(item);
-        return -1;
-    }
-    // execPromotor();
+    ptruser user;
 
      printf("\n---Bem vindo Administrador---\n");
 
     while (1)
     {
-
-       
         printf("Deseja testar que funcionalidade?: <comandos> <promotor> <utilizadores> <itens> <sair>\n");
         fgets(ms, TAM, stdin);
         ms[strcspn(ms, "\n")] = 0; // strcspn conta os caracteres de uma string evitando o \n - set \n to 0
@@ -260,18 +278,27 @@ int main(int argc, char **argv)
             printf("\nInsira o nome do ficheiro: \n");
             fgets(nomeFich, TAM, stdin);
             nomeFich[strcspn(nomeFich, "\n")] = 0;
+            item = leFicheiroVendas(nomeFich);
 
-           item = leFicheiroVendas(nomeFich);
+            //printf("\n[%s]\n",item->nomeItem);
         }
         else if (strcmp(ms, "utilizadores") == 0)
         {
 
-            printf("\nA ser implementado\n");
+            int quantUsers = loadUsersFile("users.txt");
+            printf("\n[%d]\n", quantUsers);
+
+            user = leFicheiroUsers(user,"users.txt", quantUsers);
+            for(int i=0; i<quantUsers;i++){
+                updateUserBalance(user[i].nome, user[i].saldo-=1);
+
+            }
+            saveUsersFile("users.txt");
+
+        
         }
         else if (strcmp(ms, "promotor") == 0)
         {
-
-            //printf("\nA ser implementado\n");
             execPromotor();
         }
         else if (strcmp(ms, "sair") == 0)
@@ -282,7 +309,6 @@ int main(int argc, char **argv)
         }
         else
         {
-
             printf("\nFuncionalidade indisponivel\n");
         }
     }

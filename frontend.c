@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     char cmd[TAM];
     char password[50];
     char username[50];
-    USER *user;
+    ptruser user;
 
     user = malloc(sizeof(USER));
     if (user == NULL)
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
 
         strcpy(user->nome, argv[1]);
 
-        user->pass = atoi(argv[2]);
+        strcpy(user->pass, argv[2]);
 
         printf("\nNome do user: %s\n", user->nome);
 

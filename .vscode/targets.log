@@ -1,0 +1,261 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.3
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2020 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Tue Nov 15 21:29:49 2022
+
+# Variables
+
+# environment
+LC_ALL = C
+# environment
+VSCODE_CWD = /home/micael
+# default
+MAKE_COMMAND := make
+# environment
+VSCODE_HANDLES_SIGPIPE = true
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# default
+.VARIABLES := 
+# environment
+PWD = /home/micael/SO/SO-TP-22-23
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# automatic
+%F = $(notdir $%)
+# environment
+LANG = C
+# default
+.LOADED := 
+# default
+.INCLUDE_DIRS = /usr/local/include /usr/include /usr/include
+# makefile
+MAKEFLAGS = pqrR
+# makefile
+CURDIR := /home/micael/SO/SO-TP-22-23
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# environment
+MFLAGS = -pqrR
+# default
+.SHELLFLAGS := -c
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# makefile (from 'makefile', line 1)
+MAKEFILE_LIST := makefile
+# automatic
+@F = $(notdir $@)
+# environment
+XDG_SESSION_TYPE = tty
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# automatic
+*F = $(notdir $*)
+# environment
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en","availableLanguages":{}}
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# makefile
+SHELL = /bin/sh
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 0
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# environment
+PATH = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b/bin/remote-cli:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+# default
+MAKEFILES := 
+# environment
+LANGUAGE = en_US:en
+# environment
+MOTD_SHOWN = pam
+# automatic
+^F = $(notdir $^)
+# environment
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 57282 22
+# automatic
+?F = $(notdir $?)
+# environment
+LS_COLORS = 
+# automatic
++F = $(notdir $+)
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+BROWSER = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b/bin/helpers/browser.sh
+# environment
+LOGNAME = micael
+# makefile
+.DEFAULT_GOAL := all
+# environment
+USER = micael
+# default
+MAKE_VERSION := 4.3
+# environment
+VSCODE_AGENT_FOLDER = /home/micael/.vscode-server
+# environment
+_ = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b/node
+# environment
+XDG_RUNTIME_DIR = /run/user/1000
+# environment
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-31d06250-fdce-4c70-920e-6c49e56de95a.sock
+# environment
+XDG_SESSION_CLASS = user
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
+# environment
+HOME = /home/micael
+# environment
+ELECTRON_RUN_AS_NODE = 1
+# environment
+XDG_SESSION_ID = 4
+# default
+.RECIPEPREFIX := 
+# automatic
+<F = $(notdir $<)
+# default
+SUFFIXES := 
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
+# environment
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 57282 fe80::a00:27ff:fed1:32f%enp0s8 22
+# variable set hash-table stats:
+# Load=64/1024=6%, Rehash=0, Collisions=1/97=1%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 2049, inode 2621996): 18 files, no impossibilities.
+
+# 18 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+backend:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 12):
+	gcc backend.c backend.h users_lib.o -o backend
+
+clean:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 21):
+	rm backend	
+	rm frontend
+	
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+all:
+#  Command line target.
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := all
+# automatic
+# * := 
+# automatic
+# < := 
+# automatic
+# + := 
+# automatic
+# % := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# automatic
+# | := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
+#  recipe to execute (from 'makefile', line 3):
+	gcc backend.c backend.h users_lib.o -o backend
+	gcc frontend.c frontend.h -o frontend
+
+rmfrontend:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 15):
+	rm frontend
+
+# Not a target:
+makefile:
+#  Implicit rule search has been done.
+#  Last modified 2022-11-14 21:20:13.429319903
+#  File has been updated.
+#  Successfully updated.
+
+rmbackend:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 18):
+	rm backend
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+frontend:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'makefile', line 8):
+	gcc frontend.c frontend.h -o frontend
+
+# files hash-table stats:
+# Load=9/1024=1%, Rehash=0, Collisions=0/21=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 26 / storage = 254 B / avg = 9 B
+# current buf: size = 8162 B / used = 254 B / count = 26 / avg = 9 B
+
+# strcache performance: lookups = 40 / hit rate = 35%
+# hash-table stats:
+# Load=26/8192=0%, Rehash=0, Collisions=0/40=0%
+# Finished Make data base on Tue Nov 15 21:29:49 2022
+
+ 
