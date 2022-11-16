@@ -8,6 +8,7 @@ void execPromotor()
     char msgVolta[TAM];
     pipe(fd);
     char resposta[TAM];
+    pid_t pid;
 
     int id = fork();
 
@@ -21,13 +22,17 @@ void execPromotor()
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
         printf("\n%s\n", resposta);
+        printf("\nid is: %d\n", id);
+        kill(id, SIGKILL); // promotor fica com estado defunct
     }
     else if(id == 0){
         close(1);
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
+        id = getpid();
         execl("./promotores/black_friday", "./black_friday" , NULL);
+        
         
     }
 }

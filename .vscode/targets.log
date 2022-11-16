@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Nov 15 21:29:49 2022
+# Make data base, printed on Wed Nov 16 14:38:04 2022
 
 # Variables
 
@@ -91,7 +91,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 57282 22
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 65406 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -117,7 +117,7 @@ _ = /home/micael/.vscode-server/bin/6261075646f055b99068d3688932416f2346dd3b/nod
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-31d06250-fdce-4c70-920e-6c49e56de95a.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-8f32113f-04b0-4f52-9c18-523361ef6c60.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -137,7 +137,7 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 57282 fe80::a00:27ff:fed1:32f%enp0s8 22
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 65406 fe80::a00:27ff:fed1:32f%enp0s8 22
 # variable set hash-table stats:
 # Load=64/1024=6%, Rehash=0, Collisions=1/97=1%
 
@@ -256,6 +256,6 @@ frontend:
 # strcache performance: lookups = 40 / hit rate = 35%
 # hash-table stats:
 # Load=26/8192=0%, Rehash=0, Collisions=0/40=0%
-# Finished Make data base on Tue Nov 15 21:29:49 2022
+# Finished Make data base on Wed Nov 16 14:38:04 2022
 
  
