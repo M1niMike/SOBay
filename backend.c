@@ -2,15 +2,17 @@
 #include "backend.h"
 #include "users_lib.h"
 
+pid_t id = -1;
+
+
 void execPromotor()
 {
     int fd[2];
     char msgVolta[TAM];
     pipe(fd);
     char resposta[TAM];
-    pid_t pid;
-
-    int id = fork();
+    
+    id = fork();
 
     if (id == -1)
     {
@@ -19,22 +21,26 @@ void execPromotor()
     }
 
     if(id > 0){
+        
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
         printf("\n%s\n", resposta);
-        printf("\nid is: %d\n", id);
-        kill(id, SIGKILL); // promotor fica com estado defunct
+
+        //Encerra o promotor
+        signal(SIGCHLD, SIG_IGN); //to ignore the signal sent to the parent when a child dies
+        kill(id, SIGKILL);
+
     }
     else if(id == 0){
         close(1);
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
-        id = getpid();
-        execl("./promotores/black_friday", "./black_friday" , NULL);
-        
-        
+        execl("./promotores/promotor_oficial", "./promotor_oficial" , NULL);
+          
     }
+    
+    
 }
 
 
