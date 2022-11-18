@@ -37,12 +37,11 @@ void execPromotor()
         close(fd[0]);
         close(fd[1]);
         execl("./promotores/promotor_oficial", "./promotor_oficial" , NULL);
-          
+         
     }
     
     
 }
-
 
 void help()
 {
@@ -222,44 +221,6 @@ ptritem leFicheiroVendas(char *nomeFich)
     return item;
 }
 
-ptruser leFicheiroUsers(ptruser user ,char * nomeFicheiro, int quant){
-
-    int i = 0;
-    FILE *f = fopen(nomeFicheiro, "r");
-
-    user = malloc(quant*sizeof(USER));
-    if(user == NULL){
-        printf("Erro na alocacao de memoria\n");
-        free(user);
-        return NULL;
-    }
-
-    if (f == NULL)
-    {
-        printf("\nNao foi possivel abrir ficheiro [%s]!\n", nomeFicheiro);
-        return NULL;
-    }
-    printf("\nA ler info de ficheiro: [%s]\n", nomeFicheiro);
-
-    while (fscanf(f, "%s %s %d", user[i].nome, user[i].pass, &(user[i].saldo)) != EOF)
-    {
-
-        printf("\n...............User %s...............\n", user[i].nome);
-
-        printf("Nome do user: %s\n", user[i].nome);
-        printf("Password do user: %s\n", user[i].pass);
-        printf("Saldo do user: %d\n", user[i].saldo);
-
-        i++;
-    }
-
-  
-
-    fclose(f);
-
-    return user;
-
-}
 
 int main(int argc, char **argv)
 {
@@ -271,6 +232,13 @@ int main(int argc, char **argv)
 
     ptritem item;
     ptruser user;
+
+    user = malloc(sizeof(USER));
+    if(user == NULL){
+        printf("Erro na alocacao de memoria\n");
+        free(user);
+        return -1;
+    }
 
      printf("\n---Bem vindo Administrador---\n");
 
@@ -291,21 +259,39 @@ int main(int argc, char **argv)
             nomeFich[strcspn(nomeFich, "\n")] = 0;
             item = leFicheiroVendas(nomeFich);
 
-            //printf("\n[%s]\n",item->nomeItem);
         }
         else if (strcmp(ms, "utilizadores") == 0)
         {
 
-            int quantUsers = loadUsersFile("users.txt");
-            printf("\n[%d]\n", quantUsers);
+            printf("\nInsira o nome do utilizador: ");
+            fgets(user->nome, TAM, stdin);
+            user->nome[strcspn(user->nome, "\n")] = 0;
 
-            user = leFicheiroUsers(user,"users.txt", quantUsers);
-            for(int i=0; i<quantUsers;i++){
-                updateUserBalance(user[i].nome, user[i].saldo-=1);
+            printf("\nInsira a password do utilizador: ");
+            fgets(user->pass, TAM, stdin);
+            user->pass[strcspn(user->pass, "\n")] = 0;
 
+            if(loadUsersFile("users.txt") > 0){
+                printf("\nFicheiro lido com Sucesso\n");
+            }else{
+                printf("\nErro na leitura de Ficheiro\n");
             }
-            saveUsersFile("users.txt");
 
+            if(isUserValid(user->nome, user->pass) == 1){
+                printf("\nlogin com exito\n");
+            }else if(isUserValid(user->nome, user->pass) == 0){
+                printf("\nPassword incorreta | user inexistente\n");
+            }else if(isUserValid(user->nome, user->pass) == -1){
+                printf("\nErro\n");
+            }
+
+            user->saldo = getUserBalance(user->nome);
+
+            user->saldo-=1;
+
+            updateUserBalance(user->nome, user->saldo);
+
+            saveUsersFile("users.txt");
         
         }
         else if (strcmp(ms, "promotor") == 0)
