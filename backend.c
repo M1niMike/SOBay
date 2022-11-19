@@ -4,14 +4,13 @@
 
 pid_t id = -1;
 
-
 void execPromotor()
 {
     int fd[2];
     char msgVolta[TAM];
     pipe(fd);
     char resposta[TAM];
-    
+
     id = fork();
 
     if (id == -1)
@@ -20,27 +19,26 @@ void execPromotor()
         return;
     }
 
-    if(id > 0){
-        
+    if (id > 0)
+    {
+
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
         printf("\n%s\n", resposta);
 
-        //Encerra o promotor
-        signal(SIGCHLD, SIG_IGN); //to ignore the signal sent to the parent when a child dies
-        kill(id, SIGKILL);
-
+        // Encerra o promotor
+        union sigval val;
+        sigqueue(id, SIGUSR1, val);
+        wait(&id);
     }
-    else if(id == 0){
+    else if (id == 0)
+    {
         close(1);
         dup(fd[1]);
         close(fd[0]);
         close(fd[1]);
-        execl("./promotores/promotor_oficial", "./promotor_oficial" , NULL);
-         
+        execl("./promotores/promotor_oficial", "./promotor_oficial", NULL);
     }
-    
-    
 }
 
 void help()
@@ -67,10 +65,10 @@ void sair()
 
 void clear()
 {
-    for(int i = 0; i < 30; i++){
+    for (int i = 0; i < 30; i++)
+    {
         printf("\n");
     }
-    
 }
 
 void interface()
@@ -85,87 +83,111 @@ void interface()
     fgets(cmd, TAM, stdin);
 
     char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
-                                      // fflush(stdout);
+                                        // fflush(stdout);
 
     strcpy(primeiraPalavra, tokenfw);
     while (tokenfw != NULL)
     {
         nPalavras++;
         tokenfw = strtok(NULL, " ");
-        
     }
 
     if (strcmp(primeiraPalavra, "users") == 0)
     {
-        if(nPalavras == 1){
+        if (nPalavras == 1)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [users]\n");
         }
-        
     }
     else if (strcmp(primeiraPalavra, "list") == 0)
     {
-        if(nPalavras == 1){
+        if (nPalavras == 1)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [list]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "kick") == 0)
     {
-        if(nPalavras == 2){
+        if (nPalavras == 2)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [kick] [nomeUser]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "prom") == 0)
     {
-        if(nPalavras == 1){
+        if (nPalavras == 1)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [prom]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "reprom") == 0)
     {
-        if(nPalavras == 1){
+        if (nPalavras == 1)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [reprom]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "cancel") == 0)
     {
-        if(nPalavras == 2){
+        if (nPalavras == 2)
+        {
             printf("\nA ser implementado...\n");
-        }else{
+        }
+        else
+        {
             printf("\nInsira apenas [cancel] [nomePromotor]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "close") == 0)
     {
-        if(nPalavras == 1 ){
-             sair();
-        }else{
+        if (nPalavras == 1)
+        {
+            sair();
+        }
+        else
+        {
             printf("\nInsira apenas [close]\n");
         }
-       
     }
     else if (strcmp(primeiraPalavra, "help") == 0)
     {
-        if(nPalavras == 1 ){
-             help();
-        }else{
+        if (nPalavras == 1)
+        {
+            help();
+        }
+        else
+        {
             printf("\nInsira apenas [help]\n");
         }
     }
     else if (strcmp(primeiraPalavra, "clear") == 0)
     {
-        if(nPalavras == 1 ){
-             clear();
-        }else{
+        if (nPalavras == 1)
+        {
+            clear();
+        }
+        else
+        {
             printf("\nInsira apenas [clear]\n");
         }
     }
@@ -182,7 +204,8 @@ ptritem leFicheiroVendas(char *nomeFich)
     int i = 0;
 
     item = malloc(30 * sizeof(ITEM));
-    if(item == NULL){
+    if (item == NULL)
+    {
         printf("Erro na alocacao de memoria\n");
         free(item);
         return NULL;
@@ -211,36 +234,35 @@ ptritem leFicheiroVendas(char *nomeFich)
         printf("Licitador mais elevado: %s\n", item[i].highestBidder);
 
         i++;
-
     }
-
-    
 
     fclose(f);
 
     return item;
 }
 
-
 int main(int argc, char **argv)
 {
 
     char cmd[TAM];
     char ms[TAM];
-    
+
     char nomeFich[TAM];
 
     ptritem item;
     ptruser user;
 
-    user = malloc(sizeof(USER));
-    if(user == NULL){
+    int quantUser = loadUsersFile("users.txt");
+
+    user = malloc(quantUser * sizeof(USER));
+    if (user == NULL)
+    {
         printf("Erro na alocacao de memoria\n");
         free(user);
         return -1;
     }
 
-     printf("\n---Bem vindo Administrador---\n");
+    printf("\n---Bem vindo Administrador---\n");
 
     while (1)
     {
@@ -252,47 +274,54 @@ int main(int argc, char **argv)
         {
             interface();
         }
-        else if (strcmp(ms, "itens") == 0){
-        
+        else if (strcmp(ms, "itens") == 0)
+        {
+
             printf("\nInsira o nome do ficheiro: \n");
             fgets(nomeFich, TAM, stdin);
             nomeFich[strcspn(nomeFich, "\n")] = 0;
             item = leFicheiroVendas(nomeFich);
-
         }
         else if (strcmp(ms, "utilizadores") == 0)
         {
 
-            printf("\nInsira o nome do utilizador: ");
-            fgets(user->nome, TAM, stdin);
-            user->nome[strcspn(user->nome, "\n")] = 0;
+            for (int i = 0; i < quantUser; i++)
+            {
 
-            printf("\nInsira a password do utilizador: ");
-            fgets(user->pass, TAM, stdin);
-            user->pass[strcspn(user->pass, "\n")] = 0;
+                printf("\nInsira o nome do utilizador: ");
+                fgets(user[i].nome, TAM, stdin);
+                user[i].nome[strcspn(user[i].nome, "\n")] = 0;
 
-            if(loadUsersFile("users.txt") > 0){
-                printf("\nFicheiro lido com Sucesso\n");
-            }else{
-                printf("\nErro na leitura de Ficheiro\n");
+                printf("\nInsira a password do utilizador: ");
+                fgets(user[i].pass, TAM, stdin);
+                user[i].pass[strcspn(user[i].pass, "\n")] = 0;
+
+                if (quantUser <= 0)
+                {
+                    printf("\nErro na leitura de Ficheiro\n");
+                }
+
+                if (isUserValid(user[i].nome, user[i].pass) == 1)
+                {
+                    printf("\nlogin com exito\n");
+                }
+                else if (isUserValid(user[i].nome, user[i].pass) == 0)
+                {
+                    printf("\nPassword incorreta | user inexistente\n");
+                }
+                else if (isUserValid(user[i].nome, user[i].pass) == -1)
+                {
+                    printf("\nErro\n");
+                }
+
+                user[i].saldo = getUserBalance(user[i].nome);
+
+                user[i].saldo -= 1;
+
+                updateUserBalance(user[i].nome, user[i].saldo);
             }
-
-            if(isUserValid(user->nome, user->pass) == 1){
-                printf("\nlogin com exito\n");
-            }else if(isUserValid(user->nome, user->pass) == 0){
-                printf("\nPassword incorreta | user inexistente\n");
-            }else if(isUserValid(user->nome, user->pass) == -1){
-                printf("\nErro\n");
-            }
-
-            user->saldo = getUserBalance(user->nome);
-
-            user->saldo-=1;
-
-            updateUserBalance(user->nome, user->saldo);
 
             saveUsersFile("users.txt");
-        
         }
         else if (strcmp(ms, "promotor") == 0)
         {
