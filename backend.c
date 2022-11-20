@@ -3,6 +3,32 @@
 #include "users_lib.h"
 
 pid_t id = -1;
+char* FUSERS;
+char* FITEMS;
+//char FPROMOTERS[TAM];
+
+void getFilePaths(){
+    
+    FITEMS = getenv("FITEMS");
+    FUSERS = getenv("FUSERS");
+
+    if (FUSERS == NULL){
+        printf("\nPor favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
+        return;
+    } else if(FITEMS == NULL){
+        printf("\nPor favor insira uma var de ambiente FITEMS para ler o ficheiro de texto que pretende!\n");
+        return;
+    } 
+    
+    /*else if(getenv(FPROMOTERS) == NULL){
+        printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de texto que pretende!\n");
+        return;
+    }*/
+
+    //strcpy(FUSERS, getenv("FUSERS"));
+    //strcpy(FITEMS, getenv("FITEMS"));
+    //strcpy(FPROMOTERS, getenv("FPROMOTERS"));
+}
 
 void execPromotor()
 {
@@ -197,27 +223,27 @@ void interface()
     }
 }
 
-ptritem leFicheiroVendas(char *nomeFich)
+ptritem leFicheiroVendas()
 {
     ptritem item;
-    FILE *f = fopen(nomeFich, "r");
+    FILE *f = fopen(FITEMS, "r");
     int i = 0;
 
     item = malloc(30 * sizeof(ITEM));
     if (item == NULL)
     {
-        printf("Erro na alocacao de memoria\n");
+        printf("\nErro na alocacao de memoria\n");
         free(item);
         return NULL;
     }
 
     if (f == NULL)
     {
-        printf("\nNao foi possivel abrir ficheiro [%s]!\n", nomeFich);
+        printf("\nNao foi possivel abrir ficheiro [%s]!\n", FITEMS);
         return NULL;
     }
 
-    printf("\nA ler info de ficheiro: [%s]\n", nomeFich);
+    printf("\nA ler info de ficheiro: [%s]\n", FITEMS);
 
     while (fscanf(f, "%d %s %s %d %d %d %s %s", &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
     {
@@ -246,21 +272,25 @@ int main(int argc, char **argv)
 
     char cmd[TAM];
     char ms[TAM];
-
-    char nomeFich[TAM];
+    int i;
 
     ptritem item;
     ptruser user;
 
-    int quantUser = loadUsersFile("users.txt");
+    getFilePaths();
+
+    printf("%s", FUSERS);
+
+    int quantUser = loadUsersFile(FUSERS);
 
     user = malloc(quantUser * sizeof(USER));
     if (user == NULL)
     {
-        printf("Erro na alocacao de memoria\n");
+        printf("\nErro na alocacao de memoria 1230\n");
         free(user);
         return -1;
     }
+
 
     printf("\n---Bem vindo Administrador---\n");
 
@@ -276,16 +306,13 @@ int main(int argc, char **argv)
         }
         else if (strcmp(ms, "itens") == 0)
         {
-
-            printf("\nInsira o nome do ficheiro: \n");
-            fgets(nomeFich, TAM, stdin);
-            nomeFich[strcspn(nomeFich, "\n")] = 0;
-            item = leFicheiroVendas(nomeFich);
+            //nomeFich[strcspn(FITEMS, "\n")] = 0;
+            item = leFicheiroVendas(FITEMS);
         }
         else if (strcmp(ms, "utilizadores") == 0)
         {
 
-            for (int i = 0; i < quantUser; i++)
+            for (i = 0; i < quantUser; i++)
             {
 
                 printf("\nInsira o nome do utilizador: ");
@@ -303,11 +330,12 @@ int main(int argc, char **argv)
 
                 if (isUserValid(user[i].nome, user[i].pass) == 1)
                 {
-                    printf("\nlogin com exito\n");
+                    printf("\nLogin com exito\n");
                 }
                 else if (isUserValid(user[i].nome, user[i].pass) == 0)
                 {
                     printf("\nPassword incorreta | user inexistente\n");
+                    break;
                 }
                 else if (isUserValid(user[i].nome, user[i].pass) == -1)
                 {
@@ -319,9 +347,15 @@ int main(int argc, char **argv)
                 user[i].saldo -= 1;
 
                 updateUserBalance(user[i].nome, user[i].saldo);
+
+                printf("\nUser %s tem %d saldo depois da atualizaçao\n", user[i].nome, user[i].saldo);
+
             }
 
-            saveUsersFile("users.txt");
+            printf("\nSaldos de %d utilizadores foram atualizados!\n", i);
+
+            saveUsersFile(FUSERS);
+
         }
         else if (strcmp(ms, "promotor") == 0)
         {
