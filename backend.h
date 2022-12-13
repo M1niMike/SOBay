@@ -17,23 +17,39 @@
 #include <signal.h>
 
 #define TAM 256
+#define BACKEND_FIFO "backend_fifo"
+#define SINAL_FIFO "sinal_fifo"
+#define SELLER_BUYER_FIFO "seller_buyer_fifo"
 
+char SELLER_BUYER_FIFO_COM[TAM];
+
+
+// estrutura para definir os utilizadores (sejam compradores ou vendedores)
 typedef struct item{
     int duracao;
     int idItem;
     char nomeItem[TAM];
     char categoria[TAM];
-    int valorAtual; // pode tb ser valorInicial wtv
+    int valorAtual; // pode tb ser valorInicial
     int valorCompreJa;
     char sellerName[TAM];
     char highestBidder[TAM];
 }ITEM, *ptritem;
 
 typedef struct user{
+    pid_t pid;
     char pass[TAM];
     int saldo;
     char nome[TAM];
     char mensagem[TAM];
 }USER, *ptruser;
+
+typedef struct backend{
+    int numItens;
+    int numUsers;
+    int numPromoters;
+    ptruser utilizador;
+}BACKEND, *ptrbackend;
+
 
 #endif //SO_BACKEND_H

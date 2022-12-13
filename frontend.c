@@ -1,6 +1,8 @@
 #include "frontend.h"
 #include "backend.h"
 
+int utilizador_fd, backend_fd;
+
 void help()
 {
     printf("---------------------\n");
@@ -228,6 +230,9 @@ int main(int argc, char **argv)
     char password[50];
     char username[50];
     ptruser user;
+    fd_set read_fds;
+    int nfd; // para o return do select
+    struct timeval tv;
 
     user = malloc(sizeof(USER));
     if (user == NULL)
@@ -237,8 +242,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // varAmb();
-    // lePipes();
+    user->pid = getpid();
 
     if (argc == 3)
     {
@@ -253,9 +257,60 @@ int main(int argc, char **argv)
 
         printf("\n\n Username registado\n");
 
+        sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, user->pid);
+
+        if (mkfifo(SELLER_BUYER_FIFO_COM, 0666) == -1){
+            perror("\nFifo do utilizador nao aberto!\n");
+            exit(EXIT_FAILURE);
+        }
+
+
+        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+        if (utilizador_fd == -1){
+            perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+
+        if (backend_fd == -1){
+            fprintf(stderr, "\nO server nao esta a correr!\n");
+            unlink(SELLER_BUYER_FIFO_COM);
+            exit(EXIT_FAILURE);
+        }
+
+        printf("\nUTILIZADOR: [%d] configurado!\n", getpid());
+
+        printf("\n[%s]\n", user->nome);
+
         while (1)
         {
-            interface(cmd);
+            tv.tv_sec = 50; //segundos
+            tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
+            
+            FD_ZERO(&read_fds); // inicializar o set
+            FD_SET(0, &read_fds); // adicionar o file descriptor ao "set"
+            FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
+
+            // ir buscar o return do select e validar 
+
+            nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
+
+            if (nfd == -1){
+                perror("\nErro no select! Nao tenho nada para ler...\n");
+            }
+            if (nfd == 0){
+                printf("\nA escuta...\n");
+            }
+
+            //depois do return do select, verificar se os fd ainda estao dentro do set
+
+            if (FD_ISSET(0, &read_fds)){
+                //TODO
+            }
+            
+            //interface(cmd);
         }
     }
     else if (argc < 3)

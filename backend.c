@@ -5,12 +5,15 @@
 pid_t id = -1;
 char* FUSERS;
 char* FITEMS;
+char* FPROMOTERS;
+int HEARTBEAT;
 //char FPROMOTERS[TAM];
 
 void getFilePaths(){
     
     FITEMS = getenv("FITEMS");
     FUSERS = getenv("FUSERS");
+    HEARTBEAT = getenv("HEARTBEAT");
 
     if (FUSERS == NULL){
         printf("\nPor favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
@@ -18,16 +21,13 @@ void getFilePaths(){
     } else if(FITEMS == NULL){
         printf("\nPor favor insira uma var de ambiente FITEMS para ler o ficheiro de texto que pretende!\n");
         return;
-    } 
-    
-    /*else if(getenv(FPROMOTERS) == NULL){
-        printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de texto que pretende!\n");
+    } else if(FPROMOTERS == NULL){
+        printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
-    }*/
-
-    //strcpy(FUSERS, getenv("FUSERS"));
-    //strcpy(FITEMS, getenv("FITEMS"));
-    //strcpy(FPROMOTERS, getenv("FPROMOTERS"));
+    } else if(HEARTBEAT == NULL){
+        printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
+        return;
+    }
 }
 
 void execPromotor()
@@ -47,7 +47,6 @@ void execPromotor()
 
     if (id > 0)
     {
-
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
         printf("\n%s\n", resposta);
@@ -266,6 +265,8 @@ ptritem leFicheiroVendas()
 
     return item;
 }
+
+
 
 int main(int argc, char **argv)
 {
