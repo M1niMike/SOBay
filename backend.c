@@ -2,6 +2,10 @@
 #include "backend.h"
 #include "users_lib.h"
 
+
+
+
+int utilizador_fd, backend_fd;
 pid_t id = -1;
 char* FUSERS;
 char* FITEMS;
@@ -10,10 +14,15 @@ int HEARTBEAT;
 //char FPROMOTERS[TAM];
 
 void getFilePaths(){
+
+    // no need to export from the shell
+    setenv("FUSERS", "users.txt", 1);
+    setenv("FITEMS", "vendas.txt", 1);
+    setenv("HEARTBEAT", "20", 1);
     
     FITEMS = getenv("FITEMS");
     FUSERS = getenv("FUSERS");
-    HEARTBEAT = getenv("HEARTBEAT");
+    HEARTBEAT = atoi(getenv("HEARTBEAT"));
 
     if (FUSERS == NULL){
         printf("\nPor favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
@@ -24,10 +33,12 @@ void getFilePaths(){
     } else if(FPROMOTERS == NULL){
         printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
-    } else if(HEARTBEAT == NULL){
+    } else if(HEARTBEAT == 0){
         printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
         return;
     }
+
+    //printf("%d", HEARTBEAT);
 }
 
 void execPromotor()
@@ -63,6 +74,8 @@ void execPromotor()
         close(fd[0]);
         close(fd[1]);
         execl("./promotores/promotor_oficial", "./promotor_oficial", NULL);
+
+        exit(-1);
     }
 }
 
@@ -84,6 +97,7 @@ void help()
 
 void sair()
 {
+    unlink(BACKEND_FIFO);
     printf("Fim do programa!\n");
     exit(EXIT_SUCCESS);
 }
@@ -95,6 +109,7 @@ void clear()
         printf("\n");
     }
 }
+
 
 void interface()
 {
@@ -244,7 +259,8 @@ ptritem leFicheiroVendas()
 
     printf("\nA ler info de ficheiro: [%s]\n", FITEMS);
 
-    while (fscanf(f, "%d %s %s %d %d %d %s %s", &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
+    while (fscanf(f, "%d %s %s %d %d %d %s %s", 
+    &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
     {
 
         printf("\n...............ITEM %d...............\n", item[i].idItem);
@@ -266,6 +282,15 @@ ptritem leFicheiroVendas()
     return item;
 }
 
+void verificaServidor()
+{ //verifica se já existe um balcao ativo
+
+    if (access(BACKEND_FIFO, F_OK) == 0)
+    {
+        printf("Aviso [já tem o servidor ativo]\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 
 int main(int argc, char **argv)
@@ -274,9 +299,35 @@ int main(int argc, char **argv)
     char cmd[TAM];
     char ms[TAM];
     int i;
+    BACKEND backend;
 
     ptritem item;
     ptruser user;
+
+    verificaServidor();
+
+    if(mkfifo(BACKEND_FIFO, 0666)== -1){
+        if(errno != EEXIST){
+            printf("Erro [Criacao - FIFO BACKEND]\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (backend_fd == -1){
+        perror("\nNao foi possivel abrir o fifo de BACKEND!\n");
+        return -1;
+    }
+
+    // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+    // if (utilizador_fd == -1){
+    //     perror("\nNao foi possivel abrir o fifo de UTILIZADOR!");
+    //     return -2;
+    // }
+
+    printf("\nServidor do backend a correr...\n");
 
     getFilePaths();
 
@@ -289,6 +340,7 @@ int main(int argc, char **argv)
     {
         printf("\nErro na alocacao de memoria 1230\n");
         free(user);
+        unlink(BACKEND_FIFO);
         return -1;
     }
 
@@ -364,7 +416,7 @@ int main(int argc, char **argv)
         }
         else if (strcmp(ms, "sair") == 0)
         {
-
+            unlink(BACKEND_FIFO);
             printf("\nA sair...\n");
             exit(EXIT_SUCCESS);
         }

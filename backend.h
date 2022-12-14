@@ -15,11 +15,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-
+#include <pthread.h>
+#include <time.h>
 #define TAM 256
 #define BACKEND_FIFO "backend_fifo"
 #define SINAL_FIFO "sinal_fifo"
-#define SELLER_BUYER_FIFO "seller_buyer_fifo"
+#define SELLER_BUYER_FIFO "seller_buyer_fifo%d"
 
 char SELLER_BUYER_FIFO_COM[TAM];
 
@@ -48,6 +49,7 @@ typedef struct backend{
     int numItens;
     int numUsers;
     int numPromoters;
+    int time;
     ptruser utilizador;
 }BACKEND, *ptrbackend;
 
