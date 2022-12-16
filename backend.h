@@ -43,6 +43,7 @@ typedef struct user{
     int saldo;
     char nome[TAM];
     char mensagem[TAM];
+    int isLoggedIn;
 }USER, *ptruser;
 
 typedef struct backend{
@@ -50,7 +51,8 @@ typedef struct backend{
     int numUsers;
     int numPromoters;
     int time;
-    ptruser utilizador;
+    ptruser utilizadores;
+    ptritem itens;
 }BACKEND, *ptrbackend;
 
 

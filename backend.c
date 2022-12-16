@@ -2,43 +2,81 @@
 #include "backend.h"
 #include "users_lib.h"
 
-
-
-
-int utilizador_fd, backend_fd;
+int utilizador_fd, sinais_fd, backend_fd;
 pid_t id = -1;
-char* FUSERS;
-char* FITEMS;
-char* FPROMOTERS;
+char *FUSERS;
+char *FITEMS;
+char *FPROMOTERS;
 int HEARTBEAT;
-//char FPROMOTERS[TAM];
+// char FPROMOTERS[TAM];
 
-void getFilePaths(){
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+void getFilePaths()
+{
 
     // no need to export from the shell
     setenv("FUSERS", "users.txt", 1);
     setenv("FITEMS", "vendas.txt", 1);
     setenv("HEARTBEAT", "20", 1);
-    
+
     FITEMS = getenv("FITEMS");
     FUSERS = getenv("FUSERS");
     HEARTBEAT = atoi(getenv("HEARTBEAT"));
 
-    if (FUSERS == NULL){
+    if (FUSERS == NULL)
+    {
         printf("\nPor favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
         return;
-    } else if(FITEMS == NULL){
+    }
+    else if (FITEMS == NULL)
+    {
         printf("\nPor favor insira uma var de ambiente FITEMS para ler o ficheiro de texto que pretende!\n");
         return;
-    } else if(FPROMOTERS == NULL){
+    }
+    else if (FPROMOTERS == NULL)
+    {
         printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
-    } else if(HEARTBEAT == 0){
+    }
+    else if (HEARTBEAT == 0)
+    {
         printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
         return;
     }
 
-    //printf("%d", HEARTBEAT);
+    // printf("%d", HEARTBEAT);
+}
+
+void verificaUser(USER user, BACKEND backend, int quantUser)
+{
+    if (isUserValid(user.nome, user.pass) == 1)
+    {
+        printf("\nUser is valid.");
+
+        for (int i = 0; i < quantUser; i++)
+        {
+            if (strcmp(backend.utilizadores[i].nome, user.nome) != 0)
+            { // o nome não está contido no backend.
+                printf("\nUser added to backend.\n");
+            }
+            else
+            { // o nome está contido no backend
+                printf("\nUser is valid. Logging in...\n");
+            }
+        }
+    }
+    else if (isUserValid(user.nome, user.pass) == 0)
+    {
+        printf("\nLogin incorreto. Login sem exito...\n");
+    }
+    else
+    {
+        printf("\nErro wtf\n");
+    }
 }
 
 void execPromotor()
@@ -95,13 +133,6 @@ void help()
     printf("---------------------\n");
 }
 
-void sair()
-{
-    unlink(BACKEND_FIFO);
-    printf("Fim do programa!\n");
-    exit(EXIT_SUCCESS);
-}
-
 void clear()
 {
     for (int i = 0; i < 30; i++)
@@ -110,16 +141,31 @@ void clear()
     }
 }
 
+void encerra(ptrbackend backend, int numUsers)
+{
+    for (int i = 0; i < numUsers; i++)
+    {
+        if (backend->utilizadores[i].pid != 0)
+        {
+            printf("[%s]", backend->utilizadores[i].nome);
+            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[i].pid);
+            unlink(SELLER_BUYER_FIFO_COM);
+            kill(backend->utilizadores[i].pid, SIGTERM);
+        }
+    }
 
-void interface()
+    unlink(BACKEND_FIFO);
+    kill(getpid(), SIGTERM);
+    // encerrar os promotores tambem
+}
+
+void interface(BACKEND backend)
 {
     char cmd[TAM];
     char primeiraPalavra[TAM];
 
     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
 
-    fflush(stdin);
-    printf("Comando: \n");
     fgets(cmd, TAM, stdin);
 
     char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
@@ -202,7 +248,7 @@ void interface()
     {
         if (nPalavras == 1)
         {
-            sair();
+            encerra(&backend, atoi(FUSERS));
         }
         else
         {
@@ -259,8 +305,8 @@ ptritem leFicheiroVendas()
 
     printf("\nA ler info de ficheiro: [%s]\n", FITEMS);
 
-    while (fscanf(f, "%d %s %s %d %d %d %s %s", 
-    &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
+    while (fscanf(f, "%d %s %s %d %d %d %s %s",
+                  &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
     {
 
         printf("\n...............ITEM %d...............\n", item[i].idItem);
@@ -283,7 +329,7 @@ ptritem leFicheiroVendas()
 }
 
 void verificaServidor()
-{ //verifica se já existe um balcao ativo
+{ // verifica se já existe um balcao ativo
 
     if (access(BACKEND_FIFO, F_OK) == 0)
     {
@@ -292,7 +338,6 @@ void verificaServidor()
     }
 }
 
-
 int main(int argc, char **argv)
 {
 
@@ -300,14 +345,24 @@ int main(int argc, char **argv)
     char ms[TAM];
     int i;
     BACKEND backend;
-
-    ptritem item;
-    ptruser user;
+    struct timeval tv;
+    fd_set read_fds;
+    USER u;
+    fflush(stdout);
 
     verificaServidor();
 
-    if(mkfifo(BACKEND_FIFO, 0666)== -1){
-        if(errno != EEXIST){
+    getFilePaths();
+    backend.numUsers = loadUsersFile(FUSERS);
+
+    backend.utilizadores = malloc(backend.numUsers * sizeof(*backend.utilizadores));
+    backend.itens = malloc(atoi(FITEMS) * sizeof(*backend.itens));
+    // backend.numPromoters = malloc(10 * sizeof(*backend.));
+
+    if (mkfifo(BACKEND_FIFO, 0666) == -1)
+    {
+        if (errno != EEXIST)
+        {
             printf("Erro [Criacao - FIFO BACKEND]\n");
             exit(EXIT_FAILURE);
         }
@@ -315,117 +370,108 @@ int main(int argc, char **argv)
 
     backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
 
-    if (backend_fd == -1){
-        perror("\nNao foi possivel abrir o fifo de BACKEND!\n");
+    if (backend_fd == -1)
+    {
+        perror("\nNao foi possivel abrir o fifo do BACKEND!\n");
         return -1;
     }
-
-    // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-
-    // if (utilizador_fd == -1){
-    //     perror("\nNao foi possivel abrir o fifo de UTILIZADOR!");
-    //     return -2;
-    // }
 
     printf("\nServidor do backend a correr...\n");
-
-    getFilePaths();
-
-    printf("%s", FUSERS);
-
-    int quantUser = loadUsersFile(FUSERS);
-
-    user = malloc(quantUser * sizeof(USER));
-    if (user == NULL)
-    {
-        printf("\nErro na alocacao de memoria 1230\n");
-        free(user);
-        unlink(BACKEND_FIFO);
-        return -1;
-    }
-
 
     printf("\n---Bem vindo Administrador---\n");
 
     while (1)
     {
-        printf("Deseja testar que funcionalidade?: <comandos> <promotor> <utilizadores> <itens> <sair>\n");
-        fgets(ms, TAM, stdin);
-        ms[strcspn(ms, "\n")] = 0; // strcspn conta os caracteres de uma string evitando o \n - set \n to 0
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
 
-        if (strcmp(ms, "comandos") == 0)
+        FD_ZERO(&read_fds);
+        FD_SET(0, &read_fds);
+        FD_SET(backend_fd, &read_fds);
+        // FD_SET(sinais_fd, &read_fds);
+
+        int nfd = select(max(backend_fd, sinais_fd) + 1, &read_fds, NULL, NULL, &tv);
+
+        if (nfd == 0)
         {
-            interface();
+            printf("\nEstou a espera de utilizadores...\n");
         }
-        else if (strcmp(ms, "itens") == 0)
+
+        if (nfd == -1)
         {
-            //nomeFich[strcspn(FITEMS, "\n")] = 0;
-            item = leFicheiroVendas(FITEMS);
+            perror("\nErro no select!\n");
         }
-        else if (strcmp(ms, "utilizadores") == 0)
+
+        if (FD_ISSET(0, &read_fds))
+        {
+            interface(backend);
+        }
+
+        if (FD_ISSET(backend_fd, &read_fds))
         {
 
-            for (i = 0; i < quantUser; i++)
+            printf("Entrei no Backend\n");
+
+            if (read(backend_fd, &u, sizeof(USER)) == -1)
             {
-
-                printf("\nInsira o nome do utilizador: ");
-                fgets(user[i].nome, TAM, stdin);
-                user[i].nome[strcspn(user[i].nome, "\n")] = 0;
-
-                printf("\nInsira a password do utilizador: ");
-                fgets(user[i].pass, TAM, stdin);
-                user[i].pass[strcspn(user[i].pass, "\n")] = 0;
-
-                if (quantUser <= 0)
-                {
-                    printf("\nErro na leitura de Ficheiro\n");
-                }
-
-                if (isUserValid(user[i].nome, user[i].pass) == 1)
-                {
-                    printf("\nLogin com exito\n");
-                }
-                else if (isUserValid(user[i].nome, user[i].pass) == 0)
-                {
-                    printf("\nPassword incorreta | user inexistente\n");
-                    break;
-                }
-                else if (isUserValid(user[i].nome, user[i].pass) == -1)
-                {
-                    printf("\nErro\n");
-                }
-
-                user[i].saldo = getUserBalance(user[i].nome);
-
-                user[i].saldo -= 1;
-
-                updateUserBalance(user[i].nome, user[i].saldo);
-
-                printf("\nUser %s tem %d saldo depois da atualizaçao\n", user[i].nome, user[i].saldo);
-
+                printf("[ERRO] Read - FIFO Backend\n");
+                unlink(BACKEND_FIFO);
+                exit(EXIT_FAILURE);
             }
 
-            printf("\nSaldos de %d utilizadores foram atualizados!\n", i);
+            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+            utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
 
-            saveUsersFile(FUSERS);
+            if (utilizador_fd == -1)
+            {
+                perror("\nNao foi possivel abrir o fifo do UTILIZADOR!\n");
+                return -2;
+            }
 
-        }
-        else if (strcmp(ms, "promotor") == 0)
-        {
-            execPromotor();
-        }
-        else if (strcmp(ms, "sair") == 0)
-        {
-            unlink(BACKEND_FIFO);
-            printf("\nA sair...\n");
-            exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            printf("\nFuncionalidade indisponivel\n");
+            verificaUser(u, backend, backend.numUsers);
+
+            // do{
+
+            // }while(isUserValid(u.nome, u.pass) == 1)
+
+            printf("%d", backend.numUsers);
+
+            // if (u.isLoggedIn == 0)
+            // {
+            //     if (isUserValid(u.nome, u.pass) == 1)
+            //     {
+            //         u.isLoggedIn = 1;
+
+            //         int size = write(utilizador_fd, &u, sizeof(USER));
+            //         if (size < 0)
+            //         {
+            //             perror("\nErro no write. No bytes ");
+            //         }
+            //         printf("User is valid\n");
+            //         // read(utilizador_fd, &u, sizeof(USER)); // le os comandos do user
+            //         // parse aos comandos
+            //     }
+
+            //     else if (isUserValid(u.nome, u.pass) == 0)
+            //     {
+            //         u.isLoggedIn = 0;
+
+            //         int size = write(utilizador_fd, &u, sizeof(USER));
+            //         if (size < 0)
+            //         {
+            //             perror("\nErro no write. No bytes ");
+            //         }
+
+            //     }
+            // }
+            // else
+            // {
+            //     continue;
+            // }
+
+            // close(backend_fd);
         }
     }
-
     return 0;
 }
 
@@ -446,3 +492,53 @@ int main(int argc, char **argv)
     /*for (int i = 0; i < 15; i++){
         valorFich[i] = atoi(linha);
     }*/
+
+//  for (i = 0; i < quantUser; i++)
+//         {
+
+//             printf("\nInsira o nome do utilizador: ");
+//             fgets(user[i].nome, TAM, stdin);
+//             user[i].nome[strcspn(user[i].nome, "\n")] = 0;
+
+//             printf("\nInsira a password do utilizador: ");
+//             fgets(user[i].pass, TAM, stdin);
+//             user[i].pass[strcspn(user[i].pass, "\n")] = 0;
+
+//             if (quantUser <= 0)
+//             {
+//                 printf("\nErro na leitura de Ficheiro\n");
+//             }
+
+//             if (isUserValid(user[i].nome, user[i].pass) == 1)
+//             {
+//                 printf("\nLogin com exito\n");
+//             }
+//             else if (isUserValid(user[i].nome, user[i].pass) == 0)
+//             {
+//                 printf("\nPassword incorreta | user inexistente\n");
+//                 break;
+//             }
+//             else if (isUserValid(user[i].nome, user[i].pass) == -1)
+//             {
+//                 printf("\nErro\n");
+//             }
+
+//             user[i].saldo = getUserBalance(user[i].nome);
+
+//             user[i].saldo -= 1;
+
+//             updateUserBalance(user[i].nome, user[i].saldo);
+
+//             printf("\nUser %s tem %d saldo depois da atualizaçao\n", user[i].nome, user[i].saldo);
+
+//         }
+
+//         printf("\nSaldos de %d utilizadores foram atualizados!\n", i);
+
+//         saveUsersFile(FUSERS);
+
+// strcmp(ms, "sair") == 0)
+//     {
+//         unlink(BACKEND_FIFO);
+//         printf("\nA sair...\n");
+//         exit(EXIT_SUCCESS);
