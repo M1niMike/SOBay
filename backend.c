@@ -365,7 +365,7 @@ int main(int argc, char **argv)
         }
     }
 
-    backend_fd = open(BACKEND_FIFO, O_RDWR);
+    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
 
     if (backend_fd == -1)
     {
@@ -406,7 +406,6 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(backend_fd, &read_fds))
         {
-            printf("Entrei no Backend\n");
 
             if (read(backend_fd, &u, sizeof(USER)) == -1)
             {
@@ -431,8 +430,6 @@ int main(int argc, char **argv)
             {
                 perror("\nErro\n");
             }
-            
-            write(utilizador_fd, &u.isLoggedIn, sizeof(u.isLoggedIn));
         }        
     }
     return 0;

@@ -305,33 +305,13 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         } // envia os detalhes do user
 
+        //receber se o login correu bem ou nao
+
     
 
         while (1)
         {
-            read(utilizador_fd, &user.isLoggedIn, sizeof(user.isLoggedIn));
-            printf("%d", user.isLoggedIn);
-            if (user.isLoggedIn == 0)
-            {
-                printf("\nNome: ");
-                scanf("%s", user.nome);
 
-                printf("\nPass: ");
-                scanf("%s", user.pass);
-
-                if (write(backend_fd, &user, sizeof(USER)) == -1)
-                {
-                    printf("[ERRO] Write novos detalhes - FIFO Backend\n");
-                    unlink(SELLER_BUYER_FIFO_COM);
-                    exit(EXIT_FAILURE);
-                } // envia os detalhes do user de novo
-
-            }
-
-            user.isLoggedIn = 1;
-
-            if (user.isLoggedIn == 1)
-            {
 
                 tv.tv_sec = 5;  // segundos
                 tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
@@ -375,7 +355,6 @@ int main(int argc, char **argv)
 
                     printf("%s", mensagem);
                 }
-            }
         }
     }
     else if (argc < 3)
