@@ -1,0 +1,9 @@
+SO:
+
+VERIFICA USER:
+	
+	1(DONE) - backend: Verificar se o user é valido.
+	2(DONE)  - backend: Fazer restrição se ele não for valido
+	3 - frontend: pedir login novamente
+	4 - frontend: enviar dados para o backend
+	5 - backend: verificar novamente.

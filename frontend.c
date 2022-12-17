@@ -3,14 +3,17 @@
 
 int utilizador_fd, backend_fd;
 
-void sigQuit_handler(){
-    printf("Numero maximo de utilizadores logados, tente novamente mais tarde\n");
+void sigQuit_handler()
+{
+    printf("\n[AVISO] - Usuario já logado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
     exit(EXIT_SUCCESS);
 }
 
-void sigTerm_handler(){
-    printf("O servidor foi encerrado\n");
-    //unlink(SELLER_BUYER_FIFO_COM);
+void sigTerm_handler()
+{
+    printf("\n[AVISO] - O servidor foi encerrado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
     exit(EXIT_SUCCESS);
 }
 
@@ -82,13 +85,13 @@ void interface(ENVIA envia, USER user, ITEM item)
 
         if (nPalavras == 1)
         {
-        
-           int test; 
-           test = write(backend_fd, &envia.comando, sizeof(strlen(envia.comando)));
-            if(test < 0){
+
+            int test;
+            test = write(backend_fd, &envia.comando, sizeof(strlen(envia.comando)));
+            if (test < 0)
+            {
                 perror("\nErro no write(sell, nada para enviar.");
             }
-
         }
         else
         {
@@ -249,6 +252,8 @@ int main(int argc, char **argv)
     USER user;
     ITEM item;
 
+    user.isLoggedIn = 0;
+
     signal(SIGQUIT, sigQuit_handler);
     signal(SIGTERM, sigTerm_handler);
 
@@ -256,7 +261,6 @@ int main(int argc, char **argv)
 
     if (argc == 3)
     {
-
         strcpy(user.nome, argv[1]);
 
         strcpy(user.pass, argv[2]);
@@ -292,60 +296,85 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-        printf("\nUTILIZADOR: [%d] configurado!\n", getpid());
+        // printf("\nUTILIZADOR: [%d] configurado!\n", getpid());
 
         if (write(backend_fd, &user, sizeof(USER)) == -1)
         {
             printf("[ERRO] Write - FIFO Backend\n");
             unlink(SELLER_BUYER_FIFO_COM);
             exit(EXIT_FAILURE);
-        }
+        } // envia os detalhes do user
+
+    
 
         while (1)
         {
-
-            tv.tv_sec = 5;  // segundos
-            tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
-
-            FD_ZERO(&read_fds);               // inicializar o set
-            FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
-            FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
-
-            // ir buscar o return do select e validar
-
-            nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
-
-            if (nfd == -1)
+            read(utilizador_fd, &user.isLoggedIn, sizeof(user.isLoggedIn));
+            printf("%d", user.isLoggedIn);
+            if (user.isLoggedIn == 0)
             {
-                perror("\nErro no select! Nao tenho nada para ler...\n");
-            }
-            if (nfd == 0)
-            {
-                printf("\nComando: ");
-            }
+                printf("\nNome: ");
+                scanf("%s", user.nome);
 
-            // depois do return do select, verificar se os fd ainda estao dentro do set
+                printf("\nPass: ");
+                scanf("%s", user.pass);
 
-            if (FD_ISSET(0, &read_fds)) // Teclado
-            {
-                fgets(envia.comando, sizeof(envia.comando), stdin);
-                interface(envia, user, item);
-            }
-
-            if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
-            {
-                printf("Entrei FD utilizador\n");
-
-                char mensagem[TAM];
-                res = read(utilizador_fd, &mensagem, sizeof(strlen(mensagem)));
-
-                if (res < 0)
+                if (write(backend_fd, &user, sizeof(USER)) == -1)
                 {
-                    perror("\nErro no read. No bytes ");
+                    printf("[ERRO] Write novos detalhes - FIFO Backend\n");
+                    unlink(SELLER_BUYER_FIFO_COM);
+                    exit(EXIT_FAILURE);
+                } // envia os detalhes do user de novo
+
+            }
+
+            user.isLoggedIn = 1;
+
+            if (user.isLoggedIn == 1)
+            {
+
+                tv.tv_sec = 5;  // segundos
+                tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
+
+                FD_ZERO(&read_fds);               // inicializar o set
+                FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
+                FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
+
+                // ir buscar o return do select e validar
+
+                nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
+
+                if (nfd == -1)
+                {
+                    perror("\nErro no select! Nao tenho nada para ler...\n");
+                }
+                if (nfd == 0)
+                {
+                    printf("\nComando: ");
                 }
 
-                printf("%s", mensagem);
+                // depois do return do select, verificar se os fd ainda estao dentro do set
 
+                if (FD_ISSET(0, &read_fds)) // Teclado
+                {
+                    fgets(envia.comando, sizeof(envia.comando), stdin);
+                    interface(envia, user, item);
+                }
+
+                if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
+                {
+                    printf("Entrei FD utilizador\n");
+
+                    char mensagem[TAM];
+                    res = read(utilizador_fd, &mensagem, sizeof(strlen(mensagem)));
+
+                    if (res < 0)
+                    {
+                        perror("\nErro no read. No bytes ");
+                    }
+
+                    printf("%s", mensagem);
+                }
             }
         }
     }

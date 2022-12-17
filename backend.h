@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <time.h>
+#include <stdbool.h>
 #define TAM 256
 #define BACKEND_FIFO "backend_fifo"
 #define SINAL_FIFO "sinal_fifo"
