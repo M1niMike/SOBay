@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Thu Dec 15 17:54:41 2022
+# Make data base, printed on Sat Dec 17 16:33:01 2022
 
 # Variables
 
@@ -28,6 +28,8 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 PWD = /home/micael/SO/SO-TP-22-23
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
+# environment
+OLDPWD = /home/micael/.vscode-server/bin/1ad8d514439d5077d2b0b7ee64d2ce82a9308e5a
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # automatic
@@ -81,7 +83,7 @@ MAKELEVEL := 0
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = /home/micael/.vscode-server/bin/5235c6bb189b60b01b1f49062f4ffa42384f8c91/bin/remote-cli:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+PATH = /home/micael/.vscode-server/bin/1ad8d514439d5077d2b0b7ee64d2ce82a9308e5a/bin/remote-cli:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
 # default
 MAKEFILES := 
 # environment
@@ -91,7 +93,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 50538 22
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 60210 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -101,7 +103,7 @@ LS_COLORS =
 # 'override' directive
 GNUMAKEFLAGS := 
 # environment
-BROWSER = /home/micael/.vscode-server/bin/5235c6bb189b60b01b1f49062f4ffa42384f8c91/bin/helpers/browser.sh
+BROWSER = /home/micael/.vscode-server/bin/1ad8d514439d5077d2b0b7ee64d2ce82a9308e5a/bin/helpers/browser.sh
 # environment
 LOGNAME = micael
 # makefile
@@ -115,11 +117,11 @@ NODE_TLS_REJECT_UNAUTHORIZED = 0
 # environment
 VSCODE_AGENT_FOLDER = /home/micael/.vscode-server
 # environment
-_ = /home/micael/.vscode-server/bin/5235c6bb189b60b01b1f49062f4ffa42384f8c91/node
+_ = /home/micael/.vscode-server/bin/1ad8d514439d5077d2b0b7ee64d2ce82a9308e5a/node
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-b5983f1a-03f2-4df1-af95-07e9459d24c9.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-8757d958-3061-4672-95e0-e762ae65e6ab.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -129,7 +131,7 @@ HOME = /home/micael
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-XDG_SESSION_ID = 5
+XDG_SESSION_ID = 4
 # default
 .RECIPEPREFIX := 
 # automatic
@@ -139,9 +141,9 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 50538 fe80::a00:27ff:fed1:32f%enp0s8 22
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 60210 fe80::a00:27ff:fed1:32f%enp0s8 22
 # variable set hash-table stats:
-# Load=65/1024=6%, Rehash=0, Collisions=1/98=1%
+# Load=66/1024=6%, Rehash=0, Collisions=1/99=1%
 
 # Pattern-specific Variable Values
 
@@ -149,9 +151,9 @@ SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 50538 fe80::a00:27ff:fed1:32f%
 
 # Directories
 
-# . (device 2049, inode 2752568): 20 files, no impossibilities.
+# . (device 2049, inode 2752568): 18 files, no impossibilities.
 
-# 20 files, no impossibilities in 1 directories.
+# 18 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -252,12 +254,12 @@ frontend:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 28 / storage = 299 B / avg = 10 B
-# current buf: size = 8162 B / used = 299 B / count = 28 / avg = 10 B
+# strcache buffers: 1 (0) / strings = 26 / storage = 254 B / avg = 9 B
+# current buf: size = 8162 B / used = 254 B / count = 26 / avg = 9 B
 
-# strcache performance: lookups = 42 / hit rate = 33%
+# strcache performance: lookups = 40 / hit rate = 35%
 # hash-table stats:
-# Load=28/8192=0%, Rehash=0, Collisions=0/42=0%
-# Finished Make data base on Thu Dec 15 17:54:41 2022
+# Load=26/8192=0%, Rehash=0, Collisions=0/40=0%
+# Finished Make data base on Sat Dec 17 16:33:01 2022
 
  

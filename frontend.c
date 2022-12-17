@@ -3,6 +3,17 @@
 
 int utilizador_fd, backend_fd;
 
+void sigQuit_handler(){
+    printf("Numero maximo de utilizadores logados, tente novamente mais tarde\n");
+    exit(EXIT_SUCCESS);
+}
+
+void sigTerm_handler(){
+    printf("O servidor foi encerrado\n");
+    //unlink(SELLER_BUYER_FIFO_COM);
+    exit(EXIT_SUCCESS);
+}
+
 void help()
 {
     printf("\n---------------------\n");
@@ -40,14 +51,12 @@ void clear()
     // system("clear");
 }
 
-void interface(USER user, ITEM item)
+void interface(ENVIA envia, USER user, ITEM item)
 {
     int nPalavras = 0;
-    char cmd[TAM];
     // printf("\nComando: ");
-    fgets(cmd, TAM, stdin);
 
-    char *token = strtok(cmd, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+    char *token = strtok(envia.comando, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     char primeiraPalavra[TAM];
     strcpy(primeiraPalavra, token);
 
@@ -73,7 +82,13 @@ void interface(USER user, ITEM item)
 
         if (nPalavras == 1)
         {
-            printf("\nA ser implementado...\n");
+        
+           int test; 
+           test = write(backend_fd, &envia.comando, sizeof(strlen(envia.comando)));
+            if(test < 0){
+                perror("\nErro no write(sell, nada para enviar.");
+            }
+
         }
         else
         {
@@ -134,7 +149,6 @@ void interface(USER user, ITEM item)
         if (nPalavras == 1)
         {
             printf("\nA ser implementado...\n");
-            // cmdTime();
         }
         else
         {
@@ -222,7 +236,7 @@ void interface(USER user, ITEM item)
 int main(int argc, char **argv)
 {
 
-    char cmd[TAM];
+    ENVIA envia;
     char password[50];
     char username[50];
     fd_set read_fds;
@@ -234,6 +248,9 @@ int main(int argc, char **argv)
 
     USER user;
     ITEM item;
+
+    signal(SIGQUIT, sigQuit_handler);
+    signal(SIGTERM, sigTerm_handler);
 
     user.pid = getpid();
 
@@ -291,7 +308,7 @@ int main(int argc, char **argv)
             tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
 
             FD_ZERO(&read_fds);               // inicializar o set
-            FD_SET(0, &read_fds);             // adicionar o file descriptor ao "set"
+            FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
             FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
 
             // ir buscar o return do select e validar
@@ -311,11 +328,11 @@ int main(int argc, char **argv)
 
             if (FD_ISSET(0, &read_fds)) // Teclado
             {
-
-                interface(user, item);
+                fgets(envia.comando, sizeof(envia.comando), stdin);
+                interface(envia, user, item);
             }
 
-            if (FD_ISSET(utilizador_fd, &read_fds))
+            if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
             {
                 printf("Entrei FD utilizador\n");
 

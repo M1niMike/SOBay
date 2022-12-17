@@ -55,5 +55,13 @@ typedef struct backend{
     ptritem itens;
 }BACKEND, *ptrbackend;
 
+typedef struct envia{
+    char comando[TAM];
+}ENVIA;
+
+typedef struct volta{
+    char comando[TAM];
+}VOLTA;
+
 
 #endif //SO_BACKEND_H

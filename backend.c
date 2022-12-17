@@ -53,6 +53,12 @@ void getFilePaths()
 
 void verificaUser(USER user, BACKEND backend, int quantUser)
 {
+    // chamar a funcao do stor para validar os dados introduzidos no argv (passados por parametro)
+    // se não for valido, imprime login sem exito
+    // se for então vai dar loop por todos os users do backend (os que estao armazenados na estrutura)
+    // se o nome do user inserido no argv ja estiver contido no backend, printf("Ja existe, logging in.");
+    // se nao estiver
+
     if (isUserValid(user.nome, user.pass) == 1)
     {
         printf("\nUser is valid.");
@@ -61,6 +67,14 @@ void verificaUser(USER user, BACKEND backend, int quantUser)
         {
             if (strcmp(backend.utilizadores[i].nome, user.nome) != 0)
             { // o nome não está contido no backend.
+                if (backend.numUsers == 20)
+                {
+                    printf("\nNao consigo inserir mais utilizadores! (MAX = 20)");
+                    unlink(SELLER_BUYER_FIFO_COM);
+                    kill(backend.utilizadores->pid, SIGQUIT);
+                    break;
+                }
+                backend.numUsers++;
                 printf("\nUser added to backend.\n");
             }
             else
@@ -147,8 +161,9 @@ void encerra(ptrbackend backend, int numUsers)
     {
         if (backend->utilizadores[i].pid != 0)
         {
+            // printf("Encerrando Users(%d)...\n" );
             printf("[%s]", backend->utilizadores[i].nome);
-            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[i].pid);
+            //  sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[i].pid);
             unlink(SELLER_BUYER_FIFO_COM);
             kill(backend->utilizadores[i].pid, SIGTERM);
         }
@@ -166,7 +181,7 @@ void interface(BACKEND backend)
 
     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
 
-    fgets(cmd, TAM, stdin);
+    fgets(cmd, sizeof(cmd), stdin);
 
     char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
                                         // fflush(stdout);
@@ -248,7 +263,7 @@ void interface(BACKEND backend)
     {
         if (nPalavras == 1)
         {
-            encerra(&backend, atoi(FUSERS));
+            encerra(&backend, backend.numUsers);
         }
         else
         {
@@ -342,12 +357,12 @@ int main(int argc, char **argv)
 {
 
     char cmd[TAM];
-    char ms[TAM];
     int i;
     BACKEND backend;
     struct timeval tv;
     fd_set read_fds;
     USER u;
+    VOLTA v;
     fflush(stdout);
 
     verificaServidor();
@@ -368,7 +383,7 @@ int main(int argc, char **argv)
         }
     }
 
-    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+    backend_fd = open(BACKEND_FIFO, O_RDWR);
 
     if (backend_fd == -1)
     {
@@ -419,55 +434,59 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
-            utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-
-            if (utilizador_fd == -1)
+            for (int i = 0; i < backend.numUsers; i++)
             {
-                perror("\nNao foi possivel abrir o fifo do UTILIZADOR!\n");
-                return -2;
+                strcpy(backend.utilizadores[i].nome, u.nome);
+                strcpy(backend.utilizadores[i].pass, u.pass);
+                backend.utilizadores[i].pid = u.pid;
+                
             }
 
-            verificaUser(u, backend, backend.numUsers);
+            // sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+            // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+            // if (utilizador_fd == -1)
+            // {
+            //     perror("\nNao foi possivel abrir o fifo do UTILIZADOR!\n");
+            //     return -2;
+            // }
+
+            //verificaUser(u, backend, backend.numUsers);
+
+        for(int i = 0; i < backend.numUsers; i++){
+            if (isUserValid(backend.utilizadores[i].nome, backend.utilizadores[i].pass) == 1)
+            {
+                printf("User is valid\n");
+                if (read(backend_fd, &v, sizeof(strlen(v.comando))) == -1)
+                {
+                    printf("[ERRO] Read - FIFO Backend\n");
+                    unlink(BACKEND_FIFO);
+                    exit(EXIT_FAILURE);
+                }
+
+                 printf("Recebeu do User: %s\n", v.comando);
+            }else if(isUserValid(backend.utilizadores[i].nome, backend.utilizadores[i].pass) == 0){
+                printf("User is not valid\n");
+            }else if(isUserValid(backend.utilizadores[i].nome, backend.utilizadores[i].pass) == -1){
+                printf("Erro\n");
+            }
+        }
+            
+
+            // printf("Recebeu do User\n");
+
+            // if (read(backend_fd, &v, sizeof(v.comando)) == -1)
+            // {
+            //     printf("[ERRO] Read - FIFO Backend\n");
+            //     // unlink(BACKEND_FIFO);
+            //     // exit(EXIT_FAILURE);
+            // }
 
             // do{
 
             // }while(isUserValid(u.nome, u.pass) == 1)
 
-            printf("%d", backend.numUsers);
-
-            // if (u.isLoggedIn == 0)
-            // {
-            //     if (isUserValid(u.nome, u.pass) == 1)
-            //     {
-            //         u.isLoggedIn = 1;
-
-            //         int size = write(utilizador_fd, &u, sizeof(USER));
-            //         if (size < 0)
-            //         {
-            //             perror("\nErro no write. No bytes ");
-            //         }
-            //         printf("User is valid\n");
-            //         // read(utilizador_fd, &u, sizeof(USER)); // le os comandos do user
-            //         // parse aos comandos
-            //     }
-
-            //     else if (isUserValid(u.nome, u.pass) == 0)
-            //     {
-            //         u.isLoggedIn = 0;
-
-            //         int size = write(utilizador_fd, &u, sizeof(USER));
-            //         if (size < 0)
-            //         {
-            //             perror("\nErro no write. No bytes ");
-            //         }
-
-            //     }
-            // }
-            // else
-            // {
-            //     continue;
-            // }
+           
 
             // close(backend_fd);
         }
@@ -542,3 +561,38 @@ int main(int argc, char **argv)
 //         unlink(BACKEND_FIFO);
 //         printf("\nA sair...\n");
 //         exit(EXIT_SUCCESS);
+
+// if (u.isLoggedIn == 0)
+// {
+//     if (isUserValid(u.nome, u.pass) == 1)
+//     {
+//         u.isLoggedIn = 1;
+
+//         int size = write(utilizador_fd, &u, sizeof(USER));
+//         if (size < 0)
+//         {
+//             perror("\nErro no write. No bytes ");
+//         }
+//         printf("User is valid\n");
+//         // read(utilizador_fd, &u, sizeof(USER)); // le os comandos do user
+//         // parse aos comandos
+//     }
+
+//     else if (isUserValid(u.nome, u.pass) == 0)
+//     {
+//         u.isLoggedIn = 0;
+
+//         int size = write(utilizador_fd, &u, sizeof(USER));
+//         if (size < 0)
+//         {
+//             perror("\nErro no write. No bytes ");
+//         }
+
+//     }
+// }
+// else
+// {
+//     continue;
+// }
+
+// close(backend_fd);
