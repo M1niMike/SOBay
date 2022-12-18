@@ -54,12 +54,12 @@ void clear()
     // system("clear");
 }
 
-void interface(ENVIA envia, USER user, ITEM item)
+void interface(USER user, ITEM item)
 {
     int nPalavras = 0;
-    // printf("\nComando: ");
+    printf("\nComando: ");
 
-    char *token = strtok(envia.comando, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+    char *token = strtok(user.comando, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     char primeiraPalavra[TAM];
     strcpy(primeiraPalavra, token);
 
@@ -85,13 +85,7 @@ void interface(ENVIA envia, USER user, ITEM item)
 
         if (nPalavras == 1)
         {
-
-            int test;
-            test = write(backend_fd, &envia.comando, sizeof(strlen(envia.comando)));
-            if (test < 0)
-            {
-                perror("\nErro no write(sell, nada para enviar.");
-            }
+            printf("\nA ser implementado...\n");
         }
         else
         {
@@ -238,8 +232,6 @@ void interface(ENVIA envia, USER user, ITEM item)
 
 int main(int argc, char **argv)
 {
-
-    ENVIA envia;
     char password[50];
     char username[50];
     fd_set read_fds;
@@ -307,7 +299,6 @@ int main(int argc, char **argv)
 
         while (1)
         {
-
             tv.tv_sec = 5;  // segundos
             tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
 
@@ -332,31 +323,39 @@ int main(int argc, char **argv)
 
             if (FD_ISSET(0, &read_fds)) // Teclado
             {
-                fgets(envia.comando, sizeof(envia.comando), stdin);
-                interface(envia, user, item);
+                fgets(user.comando, sizeof(user.comando), stdin);
+                interface(user, item);
+                write(backend_fd, &user, sizeof(user));
+                printf("\nTeste\n");
+                //close(utilizador_fd);
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
             {
                 printf("Entrei FD utilizador\n");
 
                 res = read(utilizador_fd, &user, sizeof(USER));
-                
+
                 if (res < 0)
                 {
                     perror("\nErro no read. No bytes ");
                 }
 
-                if (user.isLoggedIn == 0){
+                //printf("%d\n", user.pid);
+
+                if (user.isLoggedIn == 0)
+                {
                     printf("\nInsira outra vez o nome: ");
                     fgets(user.nome, sizeof(user.nome), stdin);
                     user.nome[strcspn(user.nome, "\n")] = 0;
-                   
+
                     printf("\nInsira novamente a passe: ");
                     fgets(user.pass, sizeof(user.pass), stdin);
                     user.pass[strcspn(user.pass, "\n")] = 0;
 
-                    write(backend_fd, &user, sizeof(USER));
-                }else{
+                    write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
+                }
+                else
+                {
                     printf("Bem vindo [%s]\n", user.nome);
                 }
             }

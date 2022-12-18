@@ -45,6 +45,7 @@ typedef struct user{
     char nome[TAM];
     char mensagem[TAM];
     int isLoggedIn;
+    char comando[TAM];
 }USER, *ptruser;
 
 typedef struct backend{
@@ -55,14 +56,6 @@ typedef struct backend{
     ptruser utilizadores;
     ptritem itens;
 }BACKEND, *ptrbackend;
-
-typedef struct envia{
-    char comando[TAM];
-}ENVIA;
-
-typedef struct volta{
-    char comando[TAM];
-}VOLTA;
 
 
 #endif //SO_BACKEND_H

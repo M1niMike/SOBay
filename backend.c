@@ -121,7 +121,6 @@ void encerra(ptrbackend backend, int numUsers)
         {
             // printf("Encerrando Users(%d)...\n" );
             printf("[%s]", backend->utilizadores[i].nome);
-            //  sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[i].pid);
             unlink(SELLER_BUYER_FIFO_COM);
             kill(backend->utilizadores[i].pid, SIGTERM);
         }
@@ -134,10 +133,12 @@ void encerra(ptrbackend backend, int numUsers)
 
 void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
 {
-    if(backend->numUsers == maxUsers){
-                printf("\nNao consigo adicionar mais users. (CHEGOU AO LIMITE)");
-                return;
+    if (backend->numUsers == maxUsers)
+    {
+        printf("\nNao consigo adicionar mais users. (CHEGOU AO LIMITE)");
+        return;
     }
+
     for (int i = 0; i < maxUsers; i++)
     {
         if (strcmp(backend->utilizadores[i].nome, u.nome) == 0)
@@ -146,14 +147,13 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
             kill(u.pid, SIGQUIT); // temp
             break;
         }
-        else
-        {
-            backend->utilizadores[i] = u;
-            backend->numUsers++;
-            printf("\nLogged In successfully!\n");
-            break;
-        }
+        
     }
+
+    backend->utilizadores[backend->numUsers] = u;
+    backend->numUsers++;
+    printf("\nLogged In successfully!");
+    
 }
 
 void interface(BACKEND backend)
@@ -245,7 +245,7 @@ void interface(BACKEND backend)
     {
         if (nPalavras == 1)
         {
-            encerra(&backend, backend.numUsers);
+            encerra(&backend, 2);
         }
         else
         {
@@ -337,26 +337,30 @@ void verificaServidor()
 
 int main(int argc, char **argv)
 {
-
-    char cmd[TAM];
     int i;
     BACKEND backend;
     struct timeval tv;
     fd_set read_fds;
     USER u;
-    VOLTA v;
     fflush(stdout);
-    int maxUsers;
+    int maxUsers = 20;
+    int numUsersInTextFile;
+    int maxItens = 30;
+    backend.numUsers = 0;
 
     u.isLoggedIn = 0;
 
     verificaServidor();
 
     getFilePaths();
-    backend.numUsers = loadUsersFile(FUSERS);
+    numUsersInTextFile = loadUsersFile(FUSERS); // conta os users do ficheiro de texto.
 
-    backend.utilizadores = malloc(backend.numUsers * sizeof(*backend.utilizadores));
-    backend.itens = malloc(atoi(FITEMS) * sizeof(*backend.itens));
+    // começar a 0
+
+    printf("aqui: %d", backend.numUsers);
+
+    backend.utilizadores = malloc(maxUsers * sizeof(*backend.utilizadores));
+    backend.itens = malloc(maxItens * sizeof(*backend.itens));
     // backend.numPromoters = malloc(10 * sizeof(*backend.));
 
     if (mkfifo(BACKEND_FIFO, 0666) == -1)
@@ -409,45 +413,60 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(backend_fd, &read_fds))
         {
-
-            if (read(backend_fd, &u, sizeof(USER)) == -1)
+            if (read(backend_fd, &u, sizeof(u)) == -1)
             {
                 printf("[ERRO] Read - FIFO Backend\n");
                 unlink(BACKEND_FIFO);
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
 
-            
+            printf("\ncomando usado (2): %s\n", u.comando);
 
-            if (isUserValid(u.nome, u.pass) == 1)
+            if (u.isLoggedIn == 0)
             {
-                printf("\nUtilizador[%s] e valido, a verificar...\n", u.nome);
-                adicionaPessoa(&backend, u, 20);
-                u.isLoggedIn = 1;
+                sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+
+                printf("%s", SELLER_BUYER_FIFO_COM);
+
+                utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+                if (utilizador_fd == -1)
+                {
+                    perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
+                    unlink(BACKEND_FIFO);
+                    exit(EXIT_FAILURE);
+                }
+
+                if (isUserValid(u.nome, u.pass) == 1)
+                {
+                    printf("\nUtilizador[%s] e valido, a verificar...\n", u.nome);
+                    u.isLoggedIn = 1;
+                    write(utilizador_fd, &u, sizeof(u));
+                    adicionaPessoa(&backend, u, maxUsers);
+                }
+                else if (isUserValid(u.nome, u.pass) == 0)
+                {
+                    printf("\nUtilizador [%s] nao e valido\n", u.nome);
+                    u.isLoggedIn = 0;
+                    write(utilizador_fd, &u, sizeof(u));
+                }
+                else
+                {
+                    perror("\nErro\n");
+                }
             }
-            else if (isUserValid(u.nome, u.pass) == 0)
+            else if (u.isLoggedIn == 1)
             {
-                printf("\nUtilizador [%s] nao e valido\n", u.nome);
-                u.isLoggedIn = 0;
-            }
-            else
-            {
-                perror("\nErro\n");
+                read(backend_fd, &u, sizeof(u)); // apanha o comando
+
+                printf("\ncomando enviado pelo user [%s]:  %s\n", u.nome, u.comando);
+                printf("NumUsers: %d\n", backend.numUsers);
             }
 
-            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
-
-            utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-
-            if (utilizador_fd == -1)
+            for (int i = 0; i < backend.numUsers; i++)
             {
-                perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
-                exit(EXIT_FAILURE);
+                printf("\nESTE E O PID (%d) DO (%s)\n", backend.utilizadores[i].pid, backend.utilizadores[i].nome);
             }
-            
-            write(utilizador_fd, &u, sizeof(u));
-            close(utilizador_fd);
-            printf("Passei");
         }
     }
     return 0;
