@@ -359,33 +359,6 @@ int main(int argc, char **argv)
                 }else{
                     printf("Bem vindo [%s]\n", user.nome);
                 }
-
-                ///printf("xD\n");
-
-                // res = read(utilizador_fd, &user, sizeof(user));
-
-                // if (res < 0)
-                // {
-                //     perror("\nErro no read. No bytes ");
-                // }
-
-                // printf("(%d)\n", user.isLoggedIn);
-
-                // if (user.isLoggedIn == 0)
-                // {
-                //     printf("Username: \n");
-                //     // scanf(" %s", user.nome);
-
-                //     printf("Pass: \n");
-                //     // scanf(" %s", user.pass);
-
-                //     write(backend_fd, &user, sizeof(USER));
-                //     close(backend_fd);
-                // }
-                // else if (user.isLoggedIn == 1)
-                // {
-                //     printf("Bem vindo\n");
-                // }
             }
         }
     }
