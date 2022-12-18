@@ -259,6 +259,31 @@ int main(int argc, char **argv)
 
     user.pid = getpid();
 
+    sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, user.pid);
+
+    if (mkfifo(SELLER_BUYER_FIFO_COM, 0666) == -1)
+    {
+        perror("\nFifo do utilizador nao criado!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR);
+
+    if (utilizador_fd == -1)
+    {
+        perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (backend_fd == -1)
+    {
+        fprintf(stderr, "\nO server nao esta a correr!\n");
+        unlink(SELLER_BUYER_FIFO_COM);
+        exit(EXIT_FAILURE);
+    }
+
     if (argc == 3)
     {
         strcpy(user.nome, argv[1]);
@@ -271,90 +296,97 @@ int main(int argc, char **argv)
 
         printf("\nUsername registado\n");
 
-        sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, user.pid);
-
-        if (mkfifo(SELLER_BUYER_FIFO_COM, 0666) == -1)
-        {
-            perror("\nFifo do utilizador nao criado!\n");
-            exit(EXIT_FAILURE);
-        }
-
-        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-
-        if (utilizador_fd == -1)
-        {
-            perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
-            exit(EXIT_FAILURE);
-        }
-
-        backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
-
-        if (backend_fd == -1)
-        {
-            fprintf(stderr, "\nO server nao esta a correr!\n");
-            unlink(SELLER_BUYER_FIFO_COM);
-            exit(EXIT_FAILURE);
-        }
-
-        // printf("\nUTILIZADOR: [%d] configurado!\n", getpid());
-
-        if (write(backend_fd, &user, sizeof(USER)) == -1)
+        if (write(backend_fd, &user, sizeof(user)) == -1)
         {
             printf("[ERRO] Write - FIFO Backend\n");
             unlink(SELLER_BUYER_FIFO_COM);
             exit(EXIT_FAILURE);
         } // envia os detalhes do user
 
-        //receber se o login correu bem ou nao
-
-    
+        // receber se o login correu bem ou nao
 
         while (1)
         {
 
+            tv.tv_sec = 5;  // segundos
+            tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
 
-                tv.tv_sec = 5;  // segundos
-                tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
+            FD_ZERO(&read_fds);               // inicializar o set
+            FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
+            FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
 
-                FD_ZERO(&read_fds);               // inicializar o set
-                FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
-                FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
+            // ir buscar o return do select e validar
 
-                // ir buscar o return do select e validar
+            nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
 
-                nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
+            if (nfd == -1)
+            {
+                perror("\nErro no select! Nao tenho nada para ler...\n");
+            }
+            if (nfd == 0)
+            {
+                printf("\nComando: ");
+            }
 
-                if (nfd == -1)
+            // depois do return do select, verificar se os fd ainda estao dentro do set
+
+            if (FD_ISSET(0, &read_fds)) // Teclado
+            {
+                fgets(envia.comando, sizeof(envia.comando), stdin);
+                interface(envia, user, item);
+            }
+            if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
+            {
+                printf("Entrei FD utilizador\n");
+
+                res = read(utilizador_fd, &user, sizeof(USER));
+                
+                if (res < 0)
                 {
-                    perror("\nErro no select! Nao tenho nada para ler...\n");
-                }
-                if (nfd == 0)
-                {
-                    printf("\nComando: ");
+                    perror("\nErro no read. No bytes ");
                 }
 
-                // depois do return do select, verificar se os fd ainda estao dentro do set
+                if (user.isLoggedIn == 0){
+                    printf("\nInsira outra vez o nome: ");
+                    fgets(user.nome, sizeof(user.nome), stdin);
+                    user.nome[strcspn(user.nome, "\n")] = 0;
+                   
+                    printf("\nInsira novamente a passe: ");
+                    fgets(user.pass, sizeof(user.pass), stdin);
+                    user.pass[strcspn(user.pass, "\n")] = 0;
 
-                if (FD_ISSET(0, &read_fds)) // Teclado
-                {
-                    fgets(envia.comando, sizeof(envia.comando), stdin);
-                    interface(envia, user, item);
+                    write(backend_fd, &user, sizeof(USER));
+                }else{
+                    printf("Bem vindo [%s]\n", user.nome);
                 }
 
-                if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
-                {
-                    printf("Entrei FD utilizador\n");
+                ///printf("xD\n");
 
-                    char mensagem[TAM];
-                    res = read(utilizador_fd, &mensagem, sizeof(strlen(mensagem)));
+                // res = read(utilizador_fd, &user, sizeof(user));
 
-                    if (res < 0)
-                    {
-                        perror("\nErro no read. No bytes ");
-                    }
+                // if (res < 0)
+                // {
+                //     perror("\nErro no read. No bytes ");
+                // }
 
-                    printf("%s", mensagem);
-                }
+                // printf("(%d)\n", user.isLoggedIn);
+
+                // if (user.isLoggedIn == 0)
+                // {
+                //     printf("Username: \n");
+                //     // scanf(" %s", user.nome);
+
+                //     printf("Pass: \n");
+                //     // scanf(" %s", user.pass);
+
+                //     write(backend_fd, &user, sizeof(USER));
+                //     close(backend_fd);
+                // }
+                // else if (user.isLoggedIn == 1)
+                // {
+                //     printf("Bem vindo\n");
+                // }
+            }
         }
     }
     else if (argc < 3)

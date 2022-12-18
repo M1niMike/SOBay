@@ -134,7 +134,10 @@ void encerra(ptrbackend backend, int numUsers)
 
 void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
 {
-
+    if(backend->numUsers == maxUsers){
+                printf("\nNao consigo adicionar mais users. (CHEGOU AO LIMITE)");
+                return;
+    }
     for (int i = 0; i < maxUsers; i++)
     {
         if (strcmp(backend->utilizadores[i].nome, u.nome) == 0)
@@ -414,23 +417,38 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
 
+            
+
             if (isUserValid(u.nome, u.pass) == 1)
             {
-                printf("\nUser[%s] is valid, checking...\n", u.nome);
-                adicionaPessoa(&backend, u, 2);
+                printf("\nUtilizador[%s] e valido, a verificar...\n", u.nome);
+                adicionaPessoa(&backend, u, 20);
                 u.isLoggedIn = 1;
             }
             else if (isUserValid(u.nome, u.pass) == 0)
             {
-                printf("\nUser[%s] is not valid\n", u.nome);
+                printf("\nUtilizador [%s] nao e valido\n", u.nome);
                 u.isLoggedIn = 0;
-                break;
             }
             else
             {
                 perror("\nErro\n");
             }
-        }        
+
+            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+
+            utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+            if (utilizador_fd == -1)
+            {
+                perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
+                exit(EXIT_FAILURE);
+            }
+            
+            write(utilizador_fd, &u, sizeof(u));
+            close(utilizador_fd);
+            printf("Passei");
+        }
     }
     return 0;
 }
