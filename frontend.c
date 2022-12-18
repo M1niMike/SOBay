@@ -50,15 +50,11 @@ void clear()
     {
         printf("\n");
     }
-
-    // system("clear");
 }
 
 void interface(USER user, ITEM item)
 {
     int nPalavras = 0;
-    printf("\nComando: ");
-
     char *token = strtok(user.comando, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     char primeiraPalavra[TAM];
     strcpy(primeiraPalavra, token);
@@ -326,12 +322,10 @@ int main(int argc, char **argv)
                 fgets(user.comando, sizeof(user.comando), stdin);
                 interface(user, item);
                 write(backend_fd, &user, sizeof(user));
-                printf("\nTeste\n");
                 //close(utilizador_fd);
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
             {
-                printf("Entrei FD utilizador\n");
 
                 res = read(utilizador_fd, &user, sizeof(USER));
 
@@ -356,7 +350,7 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    printf("Bem vindo [%s]\n", user.nome);
+                    printf("\nBem vindo [%s]\n", user.nome);
                 }
             }
         }
