@@ -9,6 +9,13 @@ VERIFICA USER + LOGIN (DONE):
 	5(DONE) - backend: verificar novamente.
 	
 
+Thread CORACAO BATIDA
+
+	1 -	Tratar da var do time (incrementar a cada segundo).
+	2 - criar a thread do coracao batida com as vars ambiente
+	3 - tratar do cmd time
+	4 - funcao para remover pessoa
+	
 
 
 

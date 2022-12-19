@@ -1,7 +1,7 @@
 #include "frontend.h"
 #include "backend.h"
 
-int utilizador_fd, backend_fd;
+int utilizador_fd, backend_fd, sinal_fd;
 
 void sigQuit_handler()
 {
@@ -15,6 +15,37 @@ void sigTerm_handler()
     printf("\n[AVISO] - O servidor foi encerrado\n");
     unlink(SELLER_BUYER_FIFO_COM);
     exit(EXIT_SUCCESS);
+}
+
+void sigUser1_handler(){
+    printf("\n[AVISO] - Foi kickado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
+    exit(EXIT_SUCCESS);
+}
+
+void *mandaSinal(void *dados){
+    ptruser pdados = (ptruser) dados;
+
+    int pid = pdados->pid;
+
+    //setenv("HEARTBEAT", "20", 1);
+    int heartBeatTime = 20;     //atoi(getenv("HEARTBEAT"));
+    while(1){
+        sleep(heartBeatTime);
+        sinal_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
+
+        if (sinal_fd == -1){
+            perror("\nErro na abertura do fifo do sinal.\n");
+            unlink(SINAL_FIFO);
+            unlink(SELLER_BUYER_FIFO_COM);
+            exit(EXIT_FAILURE);
+        }
+        if(write(sinal_fd, &pid, sizeof(pid)) < 0){
+            perror("\nErro write heartbeat message to thread\n");
+        }
+        
+        close(sinal_fd);
+    }
 }
 
 void help()
@@ -236,14 +267,17 @@ int main(int argc, char **argv)
     fflush(stdout);
     char mensagem[TAM];
     int res;
+    pthread_t heartbeat_thread; //mandar o sinal para o backend
 
     USER user;
     ITEM item;
 
     user.isLoggedIn = 0;
+    user.tempoLogged = 0;
 
     signal(SIGQUIT, sigQuit_handler);
     signal(SIGTERM, sigTerm_handler);
+    signal(SIGUSR1, sigUser1_handler);
 
     user.pid = getpid();
 
@@ -292,6 +326,9 @@ int main(int argc, char **argv)
         } // envia os detalhes do user
 
         // receber se o login correu bem ou nao
+        if(pthread_create(&heartbeat_thread, NULL, &mandaSinal, &user) != 0){
+            perror("\nErro na thread\n");
+        }
 
         while (1)
         {
@@ -322,7 +359,6 @@ int main(int argc, char **argv)
                 fgets(user.comando, sizeof(user.comando), stdin);
                 interface(user, item);
                 write(backend_fd, &user, sizeof(user));
-                //close(utilizador_fd);
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
             {
@@ -333,8 +369,6 @@ int main(int argc, char **argv)
                 {
                     perror("\nErro no read. No bytes ");
                 }
-
-                //printf("%d\n", user.pid);
 
                 if (user.isLoggedIn == 0)
                 {

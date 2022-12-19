@@ -42,11 +42,11 @@ void getFilePaths()
         printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
     }
-    else if (HEARTBEAT == 0)
-    {
-        printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
-        return;
-    }
+    // else if (HEARTBEAT == 0)
+    // {
+    //     printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
+    //     return;
+    // }
 
     // printf("%d", HEARTBEAT);
 }
@@ -126,6 +126,7 @@ void encerra(ptrbackend backend, int numUsers)
     }
 
     unlink(BACKEND_FIFO);
+    unlink(SINAL_FIFO);
     kill(getpid(), SIGTERM);
     // encerrar os promotores tambem
 }
@@ -146,16 +147,81 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
             kill(u.pid, SIGQUIT); // temp
             break;
         }
-        
     }
 
     backend->utilizadores[backend->numUsers] = u;
     backend->numUsers++;
     printf("\nLogged In successfully!\n");
-    
 }
 
-void interface(BACKEND backend)
+void resetDados(ptruser user)
+{
+    strcpy(user->nome, "\0");
+    strcpy(user->pass, "\0");
+    strcpy(user->comando, "\0");
+    user->saldo = 0;
+    user->isLoggedIn = 0;
+    user->pid = 0;
+    user->tempoLogged = 0;
+}
+
+void removePessoaFromArray(ptrbackend backend, USER user, int maxUsers)
+{
+    for (int i = 0; i < maxUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, user.nome) == 0) // se o nome for igual
+        {
+            if (backend->utilizadores[i].pid != 0) // e ele existir
+            {
+                //backend->numUsers--;
+                kill(backend->utilizadores[i].pid, SIGUSR1);
+                resetDados(&backend->utilizadores[i]);  
+            }
+        }
+        
+    }
+
+      backend->numUsers--;
+
+}
+
+void *aumentaTempo(void *dados)
+{
+    ptrbackend pdados = (ptrbackend)dados;
+
+    while (1)
+    {
+        // para contar o tempo, mandá-lo dormir 1 segundo e incrementar a var do tempo
+        sleep(1);
+        pdados->time++;
+        for (int i = 0; i < pdados->numUsers; i++)
+        {
+            if (pdados->utilizadores[i].pid != 0)
+            { // o utilizador nesta posição tem um pid != de 0, ou seja, existe
+                pdados->utilizadores[i].tempoLogged++;
+                if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT)
+                {
+                    removePessoaFromArray(pdados, pdados->utilizadores[i], 20);
+                    unlink(SELLER_BUYER_FIFO_COM);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void resetUserTime(ptrbackend backend, int pid)
+{ // respondeu ao heartbeat, set no tempo a 0
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (backend->utilizadores[i].pid == pid)
+        {
+            backend->utilizadores[i].tempoLogged = 0;
+        }
+    }
+}
+
+void interface(ptrbackend backend, USER user)
 {
     char cmd[TAM];
     char primeiraPalavra[TAM];
@@ -244,7 +310,7 @@ void interface(BACKEND backend)
     {
         if (nPalavras == 1)
         {
-            encerra(&backend, backend.numUsers);
+            encerra(backend, backend->numUsers);
         }
         else
         {
@@ -346,6 +412,8 @@ int main(int argc, char **argv)
     int numUsersInTextFile;
     int maxItens = 30;
     backend.numUsers = 0;
+    pthread_t incrementaTempo;
+    pthread_t recebeSinal;
 
     u.isLoggedIn = 0;
 
@@ -367,6 +435,15 @@ int main(int argc, char **argv)
         }
     }
 
+    if (mkfifo(SINAL_FIFO, 0666) == -1)
+    {
+        if (errno != EEXIST)
+        {
+            printf("Erro [Criacao - FIFO SINAIS]\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
 
     if (backend_fd == -1)
@@ -375,9 +452,24 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    sinais_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (sinais_fd == -1)
+    {
+        perror("\nNao foi possivel abrir o fifo dos SINAIS!\n");
+        return -1;
+    }
+
     printf("\nServidor do backend a correr...\n");
 
     printf("\n---Bem vindo Administrador---\n");
+
+    if (pthread_create(&incrementaTempo, NULL, &aumentaTempo, &backend) != 0)
+    {
+        printf("\nFalha na criacao da thread.\n");
+    }
+
+    printf("%d", HEARTBEAT);
 
     while (1)
     {
@@ -387,7 +479,7 @@ int main(int argc, char **argv)
         FD_ZERO(&read_fds);
         FD_SET(0, &read_fds);
         FD_SET(backend_fd, &read_fds);
-        // FD_SET(sinais_fd, &read_fds);
+        FD_SET(sinais_fd, &read_fds);
 
         int nfd = select(max(backend_fd, sinais_fd) + 1, &read_fds, NULL, NULL, &tv);
 
@@ -403,7 +495,7 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(0, &read_fds))
         {
-            interface(backend);
+            interface(&backend, u);
         }
 
         if (FD_ISSET(backend_fd, &read_fds))
@@ -412,6 +504,7 @@ int main(int argc, char **argv)
             {
                 printf("[ERRO] Read - FIFO Backend\n");
                 unlink(BACKEND_FIFO);
+                unlink(SINAL_FIFO);
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
 
@@ -425,6 +518,7 @@ int main(int argc, char **argv)
                 {
                     perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
                     unlink(BACKEND_FIFO);
+                    unlink(SINAL_FIFO);
                     exit(EXIT_FAILURE);
                 }
 
@@ -450,15 +544,42 @@ int main(int argc, char **argv)
             {
                 read(backend_fd, &u, sizeof(u)); // apanha o comando
 
-                printf("\ncomando enviado pelo user [%s]: %s\n", u.nome, u.comando);
+                if(strcmp(u.comando, " ") != 0){
+                    printf("\ncomando enviado pelo user [%s]: %s\n", u.nome, u.comando);
+                    resetUserTime(&backend, u.pid);
+                }
+                
+
+                // if (strcmp(u.comando, "reset") == 0)
+                // {
+                //     printf("\nDei Reset\n");
+                //     //resetUserTime(&backend, u.pid);
+                // }
+                // printf("\nKEKW\n");
+
             }
 
-            for(int i = 0; i < backend.numUsers; i++){
-                printf("\n Nome:%s  PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pid);
+            for (int i = 0; i < backend.numUsers; i++)
+            {
+                printf("\nNome: %s - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pid);
             }
-            
-
         }
+        if (FD_ISSET(sinais_fd, &read_fds))
+        {
+            printf("\nEntrei no SINAIS_FD\n");
+            int aux;
+            int size = read(sinais_fd, &aux, sizeof(aux));
+
+            // if (size == sizeof(aux))
+            // {
+            //     printf("Entrei no Reset\n");
+            //     resetUserTime(&backend, aux);
+            // }
+        }
+
+        // okay o tempo de heartbeat ja passou?
+        //  se sim, remove user
+        //  se não caga
     }
     return 0;
 }
