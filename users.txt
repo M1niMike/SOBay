@@ -3,3 +3,5 @@ joao 456 98
 gonzo 789 100
 maximo 111 200
 barradas 222 300
+lima 333 100
+zzz 444 100

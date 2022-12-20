@@ -143,7 +143,7 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
     {
         if (strcmp(backend->utilizadores[i].nome, u.nome) == 0)
         {
-            printf("\nUser already logged in\n");
+            printf("\nUtilizador [%s] ja estava logado\n", backend->utilizadores[i].nome);
             kill(u.pid, SIGQUIT); // temp
             break;
         }
@@ -151,10 +151,9 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
 
     backend->utilizadores[backend->numUsers] = u;
     backend->numUsers++;
-    printf("\nLogged In successfully!\n");
 }
 
-void resetDados(ptruser user)
+void resetDados(ptrbackend backend, ptruser user)
 {
     strcpy(user->nome, "\0");
     strcpy(user->pass, "\0");
@@ -165,24 +164,43 @@ void resetDados(ptruser user)
     user->tempoLogged = 0;
 }
 
-void removePessoaFromArray(ptrbackend backend, USER user, int maxUsers)
+void removePessoaFromArray(ptrbackend backend, USER user)
 {
-    for (int i = 0; i < maxUsers; i++)
+
+    for (int i = 0; i < backend->numUsers; i++)
     {
         if (strcmp(backend->utilizadores[i].nome, user.nome) == 0) // se o nome for igual
         {
-            if (backend->utilizadores[i].pid != 0) // e ele existir
+            if (backend->utilizadores[i].pid == user.pid) // e ele existir
             {
-                //backend->numUsers--;
+                printf("\n(%s) removido por inatividade\n", backend->utilizadores[i].nome);
                 kill(backend->utilizadores[i].pid, SIGUSR1);
-                resetDados(&backend->utilizadores[i]);  
+                resetDados(backend, &backend->utilizadores[i]);
+                // backend->numUsers--;
+                break;
             }
         }
-        
     }
+}
 
-      backend->numUsers--;
+void CmdRemovePessoaFromArray(ptrbackend backend, char *nome)
+{
 
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, nome) == 0) // se o nome for igual
+        {
+            if (backend->utilizadores[i].pid != 0) // e ele existir
+            {
+
+                kill(backend->utilizadores[i].pid, SIGUSR1);
+                resetDados(backend, &backend->utilizadores[i]);
+                backend->numUsers--;
+                printf("Kickou %s\n", nome);
+                break;
+            }
+        }
+    }
 }
 
 void *aumentaTempo(void *dados)
@@ -201,9 +219,8 @@ void *aumentaTempo(void *dados)
                 pdados->utilizadores[i].tempoLogged++;
                 if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT)
                 {
-                    removePessoaFromArray(pdados, pdados->utilizadores[i], 20);
-                    unlink(SELLER_BUYER_FIFO_COM);
-                    break;
+                    removePessoaFromArray(pdados, pdados->utilizadores[i]);
+                    // unlink(SELLER_BUYER_FIFO_COM);
                 }
             }
         }
@@ -221,7 +238,21 @@ void resetUserTime(ptrbackend backend, int pid)
     }
 }
 
-void interface(ptrbackend backend, USER user)
+void cmdUsers(BACKEND backend)
+{
+
+    for (int i = 0; i < backend.numUsers; i++)
+    {
+        if (backend.utilizadores[i].pid != 0)
+        {
+            printf("\nNome: %s - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pid);
+        }
+    }
+
+    //print a avisa que nao tem users
+}
+
+void interface(BACKEND backend, USER user)
 {
     char cmd[TAM];
     char primeiraPalavra[TAM];
@@ -244,7 +275,7 @@ void interface(ptrbackend backend, USER user)
     {
         if (nPalavras == 1)
         {
-            printf("\nA ser implementado...\n");
+            cmdUsers(backend);
         }
         else
         {
@@ -310,7 +341,7 @@ void interface(ptrbackend backend, USER user)
     {
         if (nPalavras == 1)
         {
-            encerra(backend, backend->numUsers);
+            encerra(&backend, backend.numUsers);
         }
         else
         {
@@ -469,8 +500,6 @@ int main(int argc, char **argv)
         printf("\nFalha na criacao da thread.\n");
     }
 
-    printf("%d", HEARTBEAT);
-
     while (1)
     {
         tv.tv_sec = 5;
@@ -485,7 +514,7 @@ int main(int argc, char **argv)
 
         if (nfd == 0)
         {
-            printf("\nEstou a espera de utilizadores...\n");
+            printf("\n[AVISO] - Estou a espera de utilizadores...\n");
         }
 
         if (nfd == -1)
@@ -495,14 +524,15 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(0, &read_fds))
         {
-            interface(&backend, u);
+            interface(backend, u);
         }
 
         if (FD_ISSET(backend_fd, &read_fds))
         {
+
             if (read(backend_fd, &u, sizeof(u)) == -1)
             {
-                printf("[ERRO] Read - FIFO Backend\n");
+                printf("[ERRO] - Read - FIFO Backend\n");
                 unlink(BACKEND_FIFO);
                 unlink(SINAL_FIFO);
                 exit(EXIT_FAILURE);
@@ -524,14 +554,14 @@ int main(int argc, char **argv)
 
                 if (isUserValid(u.nome, u.pass) == 1)
                 {
-                    printf("\n[AVISO] - Utilizador[%s] e valido, a verificar...", u.nome);
+                    printf("\n[Login] - Utilizador [%s] e valido, a verificar...\n", u.nome);
                     u.isLoggedIn = 1;
                     write(utilizador_fd, &u, sizeof(u));
                     adicionaPessoa(&backend, u, maxUsers);
                 }
                 else if (isUserValid(u.nome, u.pass) == 0)
                 {
-                    printf("\n[AVISO] - Utilizador [%s] nao e valido", u.nome);
+                    printf("\n[Login] - Utilizador [%s] nao e valido\n", u.nome);
                     u.isLoggedIn = 0;
                     write(utilizador_fd, &u, sizeof(u));
                 }
@@ -544,11 +574,11 @@ int main(int argc, char **argv)
             {
                 read(backend_fd, &u, sizeof(u)); // apanha o comando
 
-                if(strcmp(u.comando, " ") != 0){
+                if (strcmp(u.comando, " ") != 0)
+                {
                     printf("\ncomando enviado pelo user [%s]: %s\n", u.nome, u.comando);
                     resetUserTime(&backend, u.pid);
                 }
-                
 
                 // if (strcmp(u.comando, "reset") == 0)
                 // {
@@ -556,12 +586,6 @@ int main(int argc, char **argv)
                 //     //resetUserTime(&backend, u.pid);
                 // }
                 // printf("\nKEKW\n");
-
-            }
-
-            for (int i = 0; i < backend.numUsers; i++)
-            {
-                printf("\nNome: %s - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pid);
             }
         }
         if (FD_ISSET(sinais_fd, &read_fds))
