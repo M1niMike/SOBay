@@ -90,179 +90,148 @@ void clear()
 
 void interface(USER user, ITEM item)
 {
-    int nPalavras = 0;
-    char *token = strtok(user.comando, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
-    char primeiraPalavra[TAM];
-    strcpy(primeiraPalavra, token);
+
+    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+    char *arg[5];
+
+    printf("%s", user.comando);
+    token = strtok(user.comando, " \n");
 
     while (token != NULL)
     {
-        nPalavras++;
-        token = strtok(NULL, " ");
-    }
+        if (strcmp(token, "sell") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
+            arg[4] = strtok(NULL, " \n");
+            arg[5] = strtok(NULL, " \n");
 
-    if (strcmp(primeiraPalavra, "sell") == 0)
-    {
-        if (nPalavras == 6)
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
+            }
+        }
+        else if (strcmp(token, "list") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "licat") == 0)
         {
-            printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "list") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
 
-        if (nPalavras == 1)
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [licat nomeCategoria]\n");
+            }
+        }
+        else if (strcmp(token, "lisel") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [lisel nomeVendedor]\n");
+            }
+        }
+        else if (strcmp(token, "lival") == 0)
+        {
+
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [lival precoMaximo]\n");
+            }
+        }
+        else if (strcmp(token, "litime") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [litime prazo]\n");
+            }
+        }
+        else if (strcmp(token, "time") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "buy") == 0)
         {
-            printf("\nInsira apenas [list]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "licat") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
 
-        if (nPalavras == 2)
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [buy id valor]\n");
+            }
+        }
+        else if (strcmp(token, "cash") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "add") == 0)
         {
-            printf("\nInsira apenas [licat nomeCategoria]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "lisel") == 0)
-    {
 
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [lisel nomeVendedor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "lival") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
 
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
+            if (arg[1] != NULL && arg[2])
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [add valor]\n");
+            }
         }
-        else
-        {
-            printf("\nInsira apenas [lival precoMaximo]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "litime") == 0)
-    {
-
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [litime prazo]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "time") == 0)
-    {
-
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [time]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "buy") == 0)
-    {
-
-        if (nPalavras == 3)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [buy id valor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "cash") == 0)
-    {
-
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [cash]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "add") == 0)
-    {
-
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [add valor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "exit") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "exit") == 0)
         {
             sair();
         }
-        else
-        {
-            printf("\nInsira apenas [exit]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "help") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "help") == 0)
         {
             help();
         }
-        else
-        {
-            printf("\nInsira apenas [help]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "clear") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "clear") == 0)
         {
             clear();
         }
         else
         {
-            printf("\nInsira apenas [clear]\n");
+            printf("\nComando invalido!\n");
         }
-    }
-    else if (strcmp(primeiraPalavra, " ") == 0)
-    {
-        printf("\nComando invalido!\n");
-    }
-    else
-    {
-        printf("\nComando invalido!\n");
+        token = strtok(NULL, " ");
     }
 }
 
@@ -367,6 +336,7 @@ int main(int argc, char **argv)
             if (FD_ISSET(0, &read_fds)) // Teclado
             {
                 fgets(user.comando, sizeof(user.comando), stdin);
+                user.comando[strcspn(user.comando, "\n")] = 0;
                 interface(user, item);
                 write(backend_fd, &user, sizeof(user));
             }
@@ -392,7 +362,7 @@ int main(int argc, char **argv)
 
                     write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
                 }
-                else
+                else if (user.isLoggedIn == 1)
                 {
                     printf("\nBem vindo [%s]\n", user.nome);
                 }
