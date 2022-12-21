@@ -251,7 +251,7 @@ void cmdUsers(BACKEND backend)
     {
         if (backend.utilizadores[i].pid != 0)
         {
-            printf("\n[AVISO] - Nome: %s - Pass: %s - Saldo: %d - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pass, backend.utilizadores[i].saldo, backend.utilizadores[i].pid);
+            printf("\n[UTILIZADORES] - Nome: %s - Pass: %s - Saldo: %d - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pass, backend.utilizadores[i].saldo, backend.utilizadores[i].pid);
         }
         else
         {
@@ -393,7 +393,7 @@ void verificaServidor()
     }
 }
 
-void utilizadorCmd(USER u)
+void utilizadorCmd(USER u, ITEM it)
 {
     char *token;
     char *arg[5];
@@ -421,7 +421,7 @@ void utilizadorCmd(USER u)
         }
         else if (strcmp(u.comando, "list") == 0)
         {
-            printf("\nLi list\n");
+            printf("\nRecebi list\n");
         }
         else if (strcmp(u.comando, "licat") == 0)
         {
@@ -670,7 +670,7 @@ int main(int argc, char **argv)
                     resetUserTime(&backend, u.pid);
                 }
 
-                utilizadorCmd(u);
+                utilizadorCmd(u, it);
             }
         }
         if (FD_ISSET(sinais_fd, &read_fds))

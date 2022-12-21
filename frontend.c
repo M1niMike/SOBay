@@ -326,7 +326,7 @@ int main(int argc, char **argv)
             }
             if (nfd == 0)
             {
-                printf("\nComando: ");
+                printf("\nEspera de comandos ou de resposta do backend");
             }
 
             // depois do return do select, verificar se os fd ainda estao dentro do set
@@ -362,6 +362,10 @@ int main(int argc, char **argv)
                 }
                 else if (user.isLoggedIn == 1)
                 {
+                    close(utilizador_fd);
+
+                    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR);
+
                     printf("\nBem vindo [%s]\n", user.nome);
                 }
             }
