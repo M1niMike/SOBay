@@ -8,7 +8,7 @@ char *FUSERS;
 char *FITEMS;
 char *FPROMOTERS;
 int HEARTBEAT;
-// char FPROMOTERS[TAM];
+char *FPROMOTERS;
 
 int max(int a, int b)
 {
@@ -18,14 +18,10 @@ int max(int a, int b)
 void getFilePaths()
 {
 
-    // no need to export from the shell
-    setenv("FUSERS", "users.txt", 1);
-    setenv("FITEMS", "vendas.txt", 1);
-    setenv("HEARTBEAT", "20", 1);
-
     FITEMS = getenv("FITEMS");
     FUSERS = getenv("FUSERS");
     HEARTBEAT = atoi(getenv("HEARTBEAT"));
+    FPROMOTERS = getenv("FPROMOTERS");
 
     if (FUSERS == NULL)
     {
@@ -42,11 +38,11 @@ void getFilePaths()
         printf("\n[AVISO] - Por favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
     }
-    // else if (HEARTBEAT == 0)
-    // {
-    //     printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
-    //     return;
-    // }
+    else if (HEARTBEAT == 0)
+    {
+        printf("\n[AVISO] - Por favor insira uma var de ambiente para o HEARTBEAT!\n");
+        return;
+    }
 
     // printf("%d", HEARTBEAT);
 }
@@ -57,35 +53,73 @@ void execPromotor()
     char msgVolta[TAM];
     pipe(fd);
     char resposta[TAM];
+    int i = 0;
 
-    id = fork();
+    ptrpromotores nomePromotores;
 
-    if (id == -1)
+    nomePromotores = malloc(10 * sizeof(PROMOTORES));
+
+    if (nomePromotores == NULL)
     {
-        printf("\n[ERRO] - Falha na execucao do fork()");
+        perror("\nErro na alocação de memória para os promotores.\n");
+        free(nomePromotores);
         return;
     }
 
-    if (id > 0)
-    {
-        read(fd[0], resposta, sizeof(resposta));
-        close(fd[1]);
-        printf("\n%s\n", resposta);
+    // para ler os promotores:
+    // criar uma função para ler o ficheiro de texto dos promoters
+    // depois ler a quantidade de promoters que existe no ficheiro de texto
+    // envolver o fork() num for com a quantidade de promoters que existem
+    // executar no execl(promotor[i], promotor[i], NULL);
 
-        // Encerra o promotor
-        union sigval val;
-        sigqueue(id, SIGUSR1, val);
-        wait(&id);
+    FILE *f = fopen(FPROMOTERS, "rt");
+
+    if (f == NULL)
+    {
+        printf("\nNão consegui abrir o ficheiro de texto dos promotores.\n");
+        return;
     }
-    else if (id == 0)
-    {
-        close(1);
-        dup(fd[1]);
-        close(fd[0]);
-        close(fd[1]);
-        execl("./promotores/promotor_oficial", "./promotor_oficial", NULL);
 
-        exit(-1);
+    while (fscanf(f, "%s", nomePromotores[i].nome) != EOF)
+    {
+
+        // strcat(nomePromotores[i].nome, "/promotores/"); //arg1 + arg2
+
+        id = fork();
+
+        if (id == -1)
+        {
+            printf("\n[ERRO] - Falha na execucao do fork()");
+            return;
+        }
+        printf("\n(%s)\n", nomePromotores[i].nome);
+
+        if (id > 0)
+        {
+            read(fd[0], resposta, sizeof(resposta));
+            close(fd[1]);
+            printf("\n%s\n", resposta);
+
+            // Encerra o promotor
+            union sigval val;
+            sigqueue(id, SIGUSR1, val);
+            wait(&id);
+        }
+
+        else if (id == 0)
+        {
+            close(1);
+            dup(fd[1]);
+            close(fd[0]);
+            close(fd[1]);
+
+            execl(nomePromotores[i].nome, nomePromotores[i].nome, NULL);
+
+            exit(-1);
+        }
+
+        i++;
+        fflush(stdout);
     }
 }
 
@@ -175,7 +209,6 @@ void removePessoaFromArray(ptrbackend backend, USER user)
             if (backend->utilizadores[i].pid == user.pid) // e ele existir
             {
                 printf("\n[AVISO] - %s removido por inatividade\n", backend->utilizadores[i].nome);
-                kill(backend->utilizadores[i].pid, SIGUSR1);
                 resetDados(backend, &backend->utilizadores[i]);
                 // backend->numUsers--;
                 break;
@@ -198,10 +231,9 @@ void *aumentaTempo(void *dados)
             if (pdados->utilizadores[i].pid != 0)
             { // o utilizador nesta posição tem um pid != de 0, ou seja, existe
                 pdados->utilizadores[i].tempoLogged++;
-                if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT)
+                if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT + 1)
                 {
                     removePessoaFromArray(pdados, pdados->utilizadores[i]);
-                    // unlink(SELLER_BUYER_FIFO_COM);
                 }
             }
         }
@@ -255,12 +287,24 @@ void cmdUsers(BACKEND backend)
         }
         else
         {
-            printf("\n[AVISO] - Nao ha users logados na plataforma neste momento.\n");
-            break;
+            if (backend.utilizadores[i].nome == " ")
+            {
+                printf("\n[AVISO] - Nao ha users logados na plataforma neste momento.\n");
+            }
+            else
+            {
+                continue;
+            }
         }
     }
     // nao esquecer de corrigir a cena do backend->numUsers-- quando acabarmos o trabalho. o espaço de memoria fica la, tratar disso!
     // print a avisa que nao tem users.
+}
+
+void cmdTime(BACKEND backend){
+    backend.time
+
+    write(utilizador_fd, &backend, (BACKEND));
 }
 
 void interface(BACKEND backend, USER user)
@@ -606,7 +650,7 @@ int main(int argc, char **argv)
 
         if (nfd == 0)
         {
-            printf("\n[AVISO] - Estou a espera de utilizadores...\n");
+            printf("\n[AVISO] - Estou a espera de utilizadores..."); // corrigir o num users
         }
 
         if (nfd == -1)
@@ -664,11 +708,8 @@ int main(int argc, char **argv)
             }
             else if (u.isLoggedIn == 1)
             {
-                if (strcmp(u.comando, " ") != 0)
-                {
-                    printf("\n[%s] enviou o comando: %s\n", u.nome, u.comando);
-                    resetUserTime(&backend, u.pid);
-                }
+
+                printf("\n[%s] enviou o comando: %s\n", u.nome, u.comando);
 
                 utilizadorCmd(u, it);
             }
@@ -679,11 +720,11 @@ int main(int argc, char **argv)
             int aux;
             int size = read(sinais_fd, &aux, sizeof(aux));
 
-            // if (size == sizeof(aux))
-            // {
-            //     printf("Entrei no Reset\n");
-            //     resetUserTime(&backend, aux);
-            // }
+            if (size == sizeof(aux))
+            {
+                printf("HEARTBEAT %s\n", u.nome); // printf corrigir, so esta printando o ultimo
+                resetUserTime(&backend, aux);
+            }
         }
 
         // okay o tempo de heartbeat ja passou?

@@ -1,6 +1,9 @@
-make --dry-run --always-make --keep-going --print-directory
+make --dry-run --keep-going --print-directory
 make: Entering directory '/home/micael/SO/SO-TP-22-23'
+ 
 gcc backend.c backend.h users_lib.o -o backend -pthread
+ 
 gcc frontend.c frontend.h -o frontend -pthread
+ 
 make: Leaving directory '/home/micael/SO/SO-TP-22-23'
  

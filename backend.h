@@ -25,7 +25,6 @@
 
 char SELLER_BUYER_FIFO_COM[TAM];
 
-
 // estrutura para definir os utilizadores (sejam compradores ou vendedores)
 typedef struct item{
     int duracao;
@@ -47,7 +46,7 @@ typedef struct user{
     int tempoLogged;
     char comando[TAM];
     char userStatus[TAM];
-    int test;
+    int timeBackend;
 }USER, *ptruser;
 
 typedef struct backend{
@@ -59,5 +58,17 @@ typedef struct backend{
     ptritem itens;
 }BACKEND, *ptrbackend;
 
+typedef struct promotores{
+    char nome[TAM];
+}PROMOTORES, *ptrpromotores;
+
+typedef struct time{
+    int time;
+}TIME, *ptrtime;
+
+typedef struct comunica{
+    int time;
+    char mensagem[TAM];
+}COMUNICA, *ptrcomunica;
 
 #endif //SO_BACKEND_H
