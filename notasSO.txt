@@ -1,0 +1,27 @@
+SO:
+
+VERIFICA USER + LOGIN (DONE):
+	
+	1(DONE) - backend: Verificar se o user é valido.
+	2(DONE)  - backend: Fazer restrição se ele não for valido
+	3(DONE)- frontend: pedir login novamente
+	4(DONE) - frontend: enviar dados para o backend
+	5(DONE) - backend: verificar novamente.
+	
+
+Thread CORACAO BATIDA
+
+	1 -	Tratar da var do time (incrementar a cada segundo).
+	2 - criar a thread do coracao batida com as vars ambiente
+	3 - tratar do cmd time
+	4 - funcao para remover pessoa
+	
+
+
+
+	PARA MUDAR NA INTERFACE
+
+	- Em vez de void, mudar o return type para char* 
+	- Na main, criar uma var aux para armazenar o cmd (char cmd[TAM];)
+	- igualar no FD_ISSET(0) (o do teclado) a variavel a chamada da funcao cmd = interface(...);
+	- chamar o write() para o backend com a informacao desse comando write(backend, &comando, sizeof(comando));

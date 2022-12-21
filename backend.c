@@ -2,32 +2,53 @@
 #include "backend.h"
 #include "users_lib.h"
 
+int utilizador_fd, sinais_fd, backend_fd;
 pid_t id = -1;
-char* FUSERS;
-char* FITEMS;
-//char FPROMOTERS[TAM];
+char *FUSERS;
+char *FITEMS;
+char *FPROMOTERS;
+int HEARTBEAT;
+// char FPROMOTERS[TAM];
 
-void getFilePaths(){
-    
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+void getFilePaths()
+{
+
+    // no need to export from the shell
+    setenv("FUSERS", "users.txt", 1);
+    setenv("FITEMS", "vendas.txt", 1);
+    setenv("HEARTBEAT", "20", 1);
+
     FITEMS = getenv("FITEMS");
     FUSERS = getenv("FUSERS");
+    HEARTBEAT = atoi(getenv("HEARTBEAT"));
 
-    if (FUSERS == NULL){
-        printf("\nPor favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
+    if (FUSERS == NULL)
+    {
+        printf("\n[AVISO] - Por favor insira uma var de ambiente FUSERS para ler o ficheiro de texto que pretende!\n");
         return;
-    } else if(FITEMS == NULL){
-        printf("\nPor favor insira uma var de ambiente FITEMS para ler o ficheiro de texto que pretende!\n");
+    }
+    else if (FITEMS == NULL)
+    {
+        printf("\n[AVISO] - Por favor insira uma var de ambiente FITEMS para ler o ficheiro de texto que pretende!\n");
         return;
-    } 
-    
-    /*else if(getenv(FPROMOTERS) == NULL){
-        printf("\nPor favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de texto que pretende!\n");
+    }
+    else if (FPROMOTERS == NULL)
+    {
+        printf("\n[AVISO] - Por favor insira uma var de ambiente FPROMOTERS para ler o ficheiro de promotores!");
         return;
-    }*/
+    }
+    // else if (HEARTBEAT == 0)
+    // {
+    //     printf("\nPor favor insira uma var de ambiente para o HEARTBEAT!\n");
+    //     return;
+    // }
 
-    //strcpy(FUSERS, getenv("FUSERS"));
-    //strcpy(FITEMS, getenv("FITEMS"));
-    //strcpy(FPROMOTERS, getenv("FPROMOTERS"));
+    // printf("%d", HEARTBEAT);
 }
 
 void execPromotor()
@@ -41,13 +62,12 @@ void execPromotor()
 
     if (id == -1)
     {
-        printf("\nFalha na execucao do fork()");
+        printf("\n[ERRO] - Falha na execucao do fork()");
         return;
     }
 
     if (id > 0)
     {
-
         read(fd[0], resposta, sizeof(resposta));
         close(fd[1]);
         printf("\n%s\n", resposta);
@@ -64,6 +84,8 @@ void execPromotor()
         close(fd[0]);
         close(fd[1]);
         execl("./promotores/promotor_oficial", "./promotor_oficial", NULL);
+
+        exit(-1);
     }
 }
 
@@ -83,12 +105,6 @@ void help()
     printf("---------------------\n");
 }
 
-void sair()
-{
-    printf("Fim do programa!\n");
-    exit(EXIT_SUCCESS);
-}
-
 void clear()
 {
     for (int i = 0; i < 30; i++)
@@ -97,129 +113,228 @@ void clear()
     }
 }
 
-void interface()
+void encerra(ptrbackend backend, int numUsers)
+{
+    for (int i = 0; i < numUsers; i++)
+    {
+        if (backend->utilizadores[i].pid != 0)
+        {
+            // printf("Encerrando Users(%d)...\n" );
+            printf("[%s]", backend->utilizadores[i].nome);
+            kill(backend->utilizadores[i].pid, SIGTERM);
+        }
+    }
+
+    unlink(BACKEND_FIFO);
+    unlink(SINAL_FIFO);
+    kill(getpid(), SIGTERM);
+    // encerrar os promotores tambem
+}
+
+void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
+{
+    if (backend->numUsers == maxUsers)
+    {
+        printf("\n[AVISO] - Nao consigo adicionar mais users. (CHEGOU AO LIMITE)\n");
+        return;
+    }
+
+    for (int i = 0; i < maxUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, u.nome) == 0)
+        {
+            printf("\n[AVISO] - Utilizador [%s] ja estava logado\n", backend->utilizadores[i].nome);
+            kill(u.pid, SIGQUIT); // temp
+            break;
+        }
+    }
+
+    backend->utilizadores[backend->numUsers] = u;
+    backend->utilizadores[backend->numUsers].saldo = getUserBalance(backend->utilizadores[backend->numUsers].nome);
+    backend->numUsers++;
+}
+
+void resetDados(ptrbackend backend, ptruser user)
+{
+    strcpy(user->nome, "\0");
+    strcpy(user->pass, "\0");
+    strcpy(user->comando, "\0");
+    user->saldo = 0;
+    user->isLoggedIn = 0;
+    user->pid = 0;
+    user->tempoLogged = 0;
+}
+
+void removePessoaFromArray(ptrbackend backend, USER user)
+{
+
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, user.nome) == 0) // se o nome for igual
+        {
+            if (backend->utilizadores[i].pid == user.pid) // e ele existir
+            {
+                printf("\n[AVISO] - %s removido por inatividade\n", backend->utilizadores[i].nome);
+                kill(backend->utilizadores[i].pid, SIGUSR1);
+                resetDados(backend, &backend->utilizadores[i]);
+                // backend->numUsers--;
+                break;
+            }
+        }
+    }
+}
+
+void *aumentaTempo(void *dados)
+{
+    ptrbackend pdados = (ptrbackend)dados;
+
+    while (1)
+    {
+        // para contar o tempo, mandá-lo dormir 1 segundo e incrementar a var do tempo
+        sleep(1);
+        pdados->time++;
+        for (int i = 0; i < pdados->numUsers; i++)
+        {
+            if (pdados->utilizadores[i].pid != 0)
+            { // o utilizador nesta posição tem um pid != de 0, ou seja, existe
+                pdados->utilizadores[i].tempoLogged++;
+                if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT)
+                {
+                    removePessoaFromArray(pdados, pdados->utilizadores[i]);
+                    // unlink(SELLER_BUYER_FIFO_COM);
+                }
+            }
+        }
+    }
+}
+
+void resetUserTime(ptrbackend backend, int pid)
+{ // respondeu ao heartbeat, set no tempo a 0
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (backend->utilizadores[i].pid == pid)
+        {
+            backend->utilizadores[i].tempoLogged = 0;
+        }
+    }
+}
+
+void cmdKick(ptrbackend backend, char *nome)
+{
+
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, nome) == 0) // se o nome for igual
+        {
+            if (backend->utilizadores[i].pid != 0) // e ele existir
+            {
+
+                kill(backend->utilizadores[i].pid, SIGUSR1);
+                resetDados(backend, &backend->utilizadores[i]);
+                // backend->numUsers--;
+                printf("[AVISO] - %s foi removido", nome);
+                break;
+            }
+        }
+    }
+}
+
+void cmdUsers(BACKEND backend)
+{
+
+    if (backend.numUsers == 0)
+    {
+        printf("\n[AVISO] - nao ha users logados na plataforma neste momento!\n");
+    }
+
+    for (int i = 0; i < backend.numUsers; i++)
+    {
+        if (backend.utilizadores[i].pid != 0)
+        {
+            printf("\n[AVISO] - Nome: %s - Pass: %s - Saldo: %d - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pass, backend.utilizadores[i].saldo, backend.utilizadores[i].pid);
+        }
+        else
+        {
+            printf("\n[AVISO] - Nao ha users logados na plataforma neste momento.\n");
+            break;
+        }
+    }
+    // nao esquecer de corrigir a cena do backend->numUsers-- quando acabarmos o trabalho. o espaço de memoria fica la, tratar disso!
+    // print a avisa que nao tem users.
+}
+
+void interface(BACKEND backend, USER user)
 {
     char cmd[TAM];
-    char primeiraPalavra[TAM];
+    char *token;
+    char *arg[2];
 
-    int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
-
-    fflush(stdin);
-    printf("Comando: \n");
     fgets(cmd, TAM, stdin);
 
-    char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
-                                        // fflush(stdout);
+    token = strtok(cmd, " \n");
 
-    strcpy(primeiraPalavra, tokenfw);
-    while (tokenfw != NULL)
+    while (token != NULL)
     {
-        nPalavras++;
-        tokenfw = strtok(NULL, " ");
-    }
+        if (strcmp(token, "users") == 0)
+        {
+            cmdUsers(backend);
+        }
+        else if (strcmp(token, "list") == 0)
+        {
+            printf("\nA ser implementado...\n");
+        }
+        else if (strcmp(token, "kick") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
 
-    if (strcmp(primeiraPalavra, "users") == 0)
-    {
-        if (nPalavras == 1)
+            if (arg[1] != NULL)
+            {
+                cmdKick(&backend, arg[1]);
+            }
+            else
+            {
+                printf("\n[AVISO] - Insira apenas [kick] [nomeUser]\n");
+            }
+        }
+        else if (strcmp(token, "prom") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
-        {
-            printf("\nInsira apenas [users]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "list") == 0)
-    {
-        if (nPalavras == 1)
+        else if (strcmp(token, "reprom") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "cancel") == 0)
         {
-            printf("\nInsira apenas [list]\n");
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO] - Insira apenas [cancel] [nomePromotor]\n");
+            }
         }
-    }
-    else if (strcmp(primeiraPalavra, "kick") == 0)
-    {
-        if (nPalavras == 2)
+        else if (strcmp(token, "close") == 0)
         {
-            printf("\nA ser implementado...\n");
+            encerra(&backend, backend.numUsers);
         }
-        else
-        {
-            printf("\nInsira apenas [kick] [nomeUser]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "prom") == 0)
-    {
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [prom]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "reprom") == 0)
-    {
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [reprom]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "cancel") == 0)
-    {
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [cancel] [nomePromotor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "close") == 0)
-    {
-        if (nPalavras == 1)
-        {
-            sair();
-        }
-        else
-        {
-            printf("\nInsira apenas [close]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "help") == 0)
-    {
-        if (nPalavras == 1)
+        else if (strcmp(token, "help") == 0)
         {
             help();
         }
-        else
-        {
-            printf("\nInsira apenas [help]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "clear") == 0)
-    {
-        if (nPalavras == 1)
+        else if (strcmp(token, "clear") == 0)
         {
             clear();
         }
         else
         {
-            printf("\nInsira apenas [clear]\n");
+            printf("\n[AVISO] - Comando invalido!\n");
         }
-    }
-    else
-    {
-        printf("\nComando invalido!\n");
+        token = strtok(NULL, " ");
     }
 }
 
@@ -232,20 +347,21 @@ ptritem leFicheiroVendas()
     item = malloc(30 * sizeof(ITEM));
     if (item == NULL)
     {
-        printf("\nErro na alocacao de memoria\n");
+        printf("\n[AVISO] - Erro na alocacao de memoria\n");
         free(item);
         return NULL;
     }
 
     if (f == NULL)
     {
-        printf("\nNao foi possivel abrir ficheiro [%s]!\n", FITEMS);
+        printf("\n[AVISO] - Nao foi possivel abrir ficheiro [%s]!\n", FITEMS);
         return NULL;
     }
 
     printf("\nA ler info de ficheiro: [%s]\n", FITEMS);
 
-    while (fscanf(f, "%d %s %s %d %d %d %s %s", &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
+    while (fscanf(f, "%d %s %s %d %d %d %s %s",
+                  &(item[i].idItem), item[i].nomeItem, item[i].categoria, &(item[i].valorAtual), &(item[i].valorCompreJa), &(item[i].duracao), item[i].sellerName, item[i].highestBidder) != EOF)
     {
 
         printf("\n...............ITEM %d...............\n", item[i].idItem);
@@ -267,112 +383,187 @@ ptritem leFicheiroVendas()
     return item;
 }
 
+void verificaServidor()
+{ // verifica se já existe um balcao ativo
+
+    if (access(BACKEND_FIFO, F_OK) == 0)
+    {
+        printf("[AVISO] - ja tem o servidor ativo]\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main(int argc, char **argv)
 {
-
-    char cmd[TAM];
-    char ms[TAM];
     int i;
+    BACKEND backend;
+    USER u;
+    ITEM it;
+    struct timeval tv;
+    fd_set read_fds;
+    fflush(stdout);
+    int maxUsers = 20;
+    int numUsersInTextFile;
+    int maxItens = 30;
+    backend.numUsers = 0;
+    pthread_t incrementaTempo;
+    pthread_t recebeSinal;
 
-    ptritem item;
-    ptruser user;
+    u.isLoggedIn = 0;
+
+    verificaServidor();
 
     getFilePaths();
+    numUsersInTextFile = loadUsersFile(FUSERS); // conta os users do ficheiro de texto.
 
-    printf("%s", FUSERS);
+    backend.utilizadores = malloc(maxUsers * sizeof(*backend.utilizadores));
+    backend.itens = malloc(maxItens * sizeof(*backend.itens));
+    // backend.numPromoters = malloc(10 * sizeof(*backend.));
 
-    int quantUser = loadUsersFile(FUSERS);
-
-    user = malloc(quantUser * sizeof(USER));
-    if (user == NULL)
+    if (mkfifo(BACKEND_FIFO, 0666) == -1)
     {
-        printf("\nErro na alocacao de memoria 1230\n");
-        free(user);
+        if (errno != EEXIST)
+        {
+            printf("[ERRO] - Criacao - FIFO BACKEND\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (mkfifo(SINAL_FIFO, 0666) == -1)
+    {
+        if (errno != EEXIST)
+        {
+            printf("[ERRO] - Criacao - FIFO SINAIS\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (backend_fd == -1)
+    {
+        perror("\n[ERRO] - Nao foi possivel abrir o fifo do BACKEND!\n");
         return -1;
     }
 
+    sinais_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (sinais_fd == -1)
+    {
+        perror("\n[ERRO] - Nao foi possivel abrir o fifo dos SINAIS!\n");
+        return -1;
+    }
+
+    printf("\nBACKEND A CORRER...\n");
 
     printf("\n---Bem vindo Administrador---\n");
 
-    while (1)
+    if (pthread_create(&incrementaTempo, NULL, &aumentaTempo, &backend) != 0)
     {
-        printf("Deseja testar que funcionalidade?: <comandos> <promotor> <utilizadores> <itens> <sair>\n");
-        fgets(ms, TAM, stdin);
-        ms[strcspn(ms, "\n")] = 0; // strcspn conta os caracteres de uma string evitando o \n - set \n to 0
-
-        if (strcmp(ms, "comandos") == 0)
-        {
-            interface();
-        }
-        else if (strcmp(ms, "itens") == 0)
-        {
-            //nomeFich[strcspn(FITEMS, "\n")] = 0;
-            item = leFicheiroVendas(FITEMS);
-        }
-        else if (strcmp(ms, "utilizadores") == 0)
-        {
-
-            for (i = 0; i < quantUser; i++)
-            {
-
-                printf("\nInsira o nome do utilizador: ");
-                fgets(user[i].nome, TAM, stdin);
-                user[i].nome[strcspn(user[i].nome, "\n")] = 0;
-
-                printf("\nInsira a password do utilizador: ");
-                fgets(user[i].pass, TAM, stdin);
-                user[i].pass[strcspn(user[i].pass, "\n")] = 0;
-
-                if (quantUser <= 0)
-                {
-                    printf("\nErro na leitura de Ficheiro\n");
-                }
-
-                if (isUserValid(user[i].nome, user[i].pass) == 1)
-                {
-                    printf("\nLogin com exito\n");
-                }
-                else if (isUserValid(user[i].nome, user[i].pass) == 0)
-                {
-                    printf("\nPassword incorreta | user inexistente\n");
-                    break;
-                }
-                else if (isUserValid(user[i].nome, user[i].pass) == -1)
-                {
-                    printf("\nErro\n");
-                }
-
-                user[i].saldo = getUserBalance(user[i].nome);
-
-                user[i].saldo -= 1;
-
-                updateUserBalance(user[i].nome, user[i].saldo);
-
-                printf("\nUser %s tem %d saldo depois da atualizaçao\n", user[i].nome, user[i].saldo);
-
-            }
-
-            printf("\nSaldos de %d utilizadores foram atualizados!\n", i);
-
-            saveUsersFile(FUSERS);
-
-        }
-        else if (strcmp(ms, "promotor") == 0)
-        {
-            execPromotor();
-        }
-        else if (strcmp(ms, "sair") == 0)
-        {
-
-            printf("\nA sair...\n");
-            exit(EXIT_SUCCESS);
-        }
-        else
-        {
-            printf("\nFuncionalidade indisponivel\n");
-        }
+        printf("\n[ERRO] - Falha na criacao da thread.\n");
     }
 
+    while (1)
+    {
+        tv.tv_sec = 5;
+        tv.tv_usec = 0;
+
+        FD_ZERO(&read_fds);
+        FD_SET(0, &read_fds);
+        FD_SET(backend_fd, &read_fds);
+        FD_SET(sinais_fd, &read_fds);
+
+        int nfd = select(max(backend_fd, sinais_fd) + 1, &read_fds, NULL, NULL, &tv);
+
+        if (nfd == 0)
+        {
+            printf("\n[AVISO] - Estou a espera de utilizadores...\n");
+        }
+
+        if (nfd == -1)
+        {
+            perror("\n[ERRO] - Erro no select!\n");
+        }
+
+        if (FD_ISSET(0, &read_fds))
+        {
+            interface(backend, u);
+        }
+
+        if (FD_ISSET(backend_fd, &read_fds))
+        {
+
+            if (read(backend_fd, &u, sizeof(u)) == -1)
+            {
+                printf("[ERRO] - Read - FIFO Backend(2)\n");
+                unlink(BACKEND_FIFO);
+                unlink(SINAL_FIFO);
+                exit(EXIT_FAILURE);
+            } // ler os detalhes do utilizador
+
+            if (u.isLoggedIn == 0)
+            {
+                sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+
+                utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
+                if (utilizador_fd == -1)
+                {
+                    perror("\n[ERRO] - Na abertura do fifo do utilizador!\n");
+                    unlink(BACKEND_FIFO);
+                    unlink(SINAL_FIFO);
+                    exit(EXIT_FAILURE);
+                }
+
+                if (isUserValid(u.nome, u.pass) == 1)
+                {
+                    printf("\n[LOGIN] - Utilizador [%s] e valido, a verificar...\n", u.nome);
+                    u.isLoggedIn = 1;
+                    write(utilizador_fd, &u, sizeof(u));
+                    adicionaPessoa(&backend, u, maxUsers);
+                }
+                else if (isUserValid(u.nome, u.pass) == 0)
+                {
+                    printf("\n[LOGIN] - Utilizador [%s] nao e valido\n", u.nome);
+                    u.isLoggedIn = 0;
+                    write(utilizador_fd, &u, sizeof(u));
+                }
+                else
+                {
+                    perror("\nErro\n");
+                }
+            }
+            else if (u.isLoggedIn == 1)
+            {
+                if (strcmp(u.comando, " ") != 0)
+                {
+                    printf("\n[%s] enviou o comando: %s\n", u.nome, u.comando);
+                    resetUserTime(&backend, u.pid);
+                }
+
+                if (strcmp(u.comando, "list") == 0)
+                {
+                    printf("\nLi list\n");
+                }
+            }
+        }
+        if (FD_ISSET(sinais_fd, &read_fds))
+        {
+            printf("\n[AVISO] - Entrei no SINAIS_FD\n");
+            int aux;
+            int size = read(sinais_fd, &aux, sizeof(aux));
+
+            // if (size == sizeof(aux))
+            // {
+            //     printf("Entrei no Reset\n");
+            //     resetUserTime(&backend, aux);
+            // }
+        }
+
+        // okay o tempo de heartbeat ja passou?
+        //  se sim, remove user
+        //  se não caga
+    }
     return 0;
 }
 
@@ -393,3 +584,134 @@ int main(int argc, char **argv)
     /*for (int i = 0; i < 15; i++){
         valorFich[i] = atoi(linha);
     }*/
+
+/*OLD INTERFACE*/
+
+// void interface(BACKEND backend, USER user)
+// {
+//     char cmd[TAM];
+//     char primeiraPalavra[TAM];
+//     char arg1[TAM];
+
+//     int nPalavras = 0; // assumir que nao começamos com palavra nenhuma
+
+//     fgets(cmd, sizeof(cmd), stdin);
+//     cmd[strcspn(cmd, "\n")] = '\0';
+
+//     char *tokenfw = strtok(cmd, " \n"); // ate ao espaco e /n por causa da ultima palavra
+//                                         // fflush(stdout);
+
+//     strcpy(primeiraPalavra, tokenfw);
+//     while (tokenfw != NULL)
+//     {
+//         nPalavras++;
+//         tokenfw = strtok(NULL, " ");
+//     }
+
+//     //
+
+//     if (strcmp(primeiraPalavra, "users") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             cmdUsers(backend);
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [users]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "list") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             printf("\nA ser implementado...\n");
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [list]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "kick") == 0)
+//     {
+
+//         if (nPalavras == 2)
+//         {
+//             CmdRemovePessoaFromArray(&backend, arg1);
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [kick] [nomeUser]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "prom") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             printf("\nA ser implementado...\n");
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [prom]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "reprom") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             printf("\nA ser implementado...\n");
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [reprom]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "cancel") == 0)
+//     {
+//         if (nPalavras == 2)
+//         {
+//             printf("\nA ser implementado...\n");
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [cancel] [nomePromotor]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "close") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             encerra(&backend, backend.numUsers);
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [close]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "help") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             help();
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [help]\n");
+//         }
+//     }
+//     else if (strcmp(primeiraPalavra, "clear") == 0)
+//     {
+//         if (nPalavras == 1)
+//         {
+//             clear();
+//         }
+//         else
+//         {
+//             printf("\n[AVISO] - Insira apenas [clear]\n");
+//         }
+//     }
+//     else
+//     {
+//         printf("\n[AVISO] - Comando invalido!\n");
+//     }
+// }

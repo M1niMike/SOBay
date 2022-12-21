@@ -1,9 +1,61 @@
 #include "frontend.h"
 #include "backend.h"
 
+int utilizador_fd, backend_fd, sinal_fd;
+
+void sigQuit_handler()
+{
+    printf("\n[AVISO] - Usuario já logado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
+    exit(EXIT_SUCCESS);
+}
+
+void sigTerm_handler()
+{
+    printf("\n[AVISO] - O servidor foi encerrado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
+    exit(EXIT_SUCCESS);
+}
+
+void sigUser1_handler()
+{
+    printf("\n[AVISO] - Foi kickado\n");
+    unlink(SELLER_BUYER_FIFO_COM);
+    exit(EXIT_SUCCESS);
+}
+
+void *mandaSinal(void *dados)
+{
+    ptruser pdados = (ptruser)dados;
+
+    int pid = pdados->pid;
+
+    // setenv("HEARTBEAT", "20", 1);
+    int heartBeatTime = 20; // atoi(getenv("HEARTBEAT"));
+    while (1)
+    {
+        sleep(heartBeatTime);
+        sinal_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
+
+        if (sinal_fd == -1)
+        {
+            perror("\nErro na abertura do fifo do sinal.\n");
+            unlink(SINAL_FIFO);
+            unlink(SELLER_BUYER_FIFO_COM);
+            exit(EXIT_FAILURE);
+        }
+        if (write(sinal_fd, &pid, sizeof(pid)) < 0)
+        {
+            perror("\nErro write heartbeat message to thread\n");
+        }
+
+        close(sinal_fd);
+    }
+}
+
 void help()
 {
-    printf("---------------------\n");
+    printf("\n---------------------\n");
     printf("COMANDOS\n");
     printf("[sell <nome-item> <categoria> <preco-base> <preco-compre-ja> <duracao>]  - \n");
     printf("[list] - \n");
@@ -23,6 +75,7 @@ void help()
 
 void sair()
 {
+    unlink(SELLER_BUYER_FIFO_COM);
     printf("Fim do programa!\n");
     exit(EXIT_SUCCESS);
 }
@@ -33,229 +86,287 @@ void clear()
     {
         printf("\n");
     }
-
-    // system("clear");
 }
 
-void interface()
+void interface(USER user, ITEM item)
 {
-    int nPalavras = 0;
-    char cmd[TAM];
-    printf("Comando: ");
-    fgets(cmd, TAM, stdin);
 
-    char *token = strtok(cmd, " \n"); // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
-    fflush(stdout);
+    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+    char *arg[5];
 
-    // fflush(stdin);
-
-    // printf("\n%s", cmd);
-
-    char primeiraPalavra[TAM];
-    strcpy(primeiraPalavra, token);
+    printf("%s", user.comando);
+    token = strtok(user.comando, " \n");
 
     while (token != NULL)
     {
-        nPalavras++;
-        token = strtok(NULL, " ");
-    }
+        if (strcmp(token, "sell") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
+            arg[4] = strtok(NULL, " \n");
+            arg[5] = strtok(NULL, " \n");
 
-    if (strcmp(primeiraPalavra, "sell") == 0)
-    {
-        if (nPalavras == 6)
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
+            }
+        }
+        else if (strcmp(token, "list") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "licat") == 0)
         {
-            printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "list") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
 
-        if (nPalavras == 1)
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [licat nomeCategoria]\n");
+            }
+        }
+        else if (strcmp(token, "lisel") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [lisel nomeVendedor]\n");
+            }
+        }
+        else if (strcmp(token, "lival") == 0)
+        {
+
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [lival precoMaximo]\n");
+            }
+        }
+        else if (strcmp(token, "litime") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [litime prazo]\n");
+            }
+        }
+        else if (strcmp(token, "time") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "buy") == 0)
         {
-            printf("\nInsira apenas [list]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "licat") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
 
-        if (nPalavras == 2)
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [buy id valor]\n");
+            }
+        }
+        else if (strcmp(token, "cash") == 0)
         {
             printf("\nA ser implementado...\n");
         }
-        else
+        else if (strcmp(token, "add") == 0)
         {
-            printf("\nInsira apenas [licat nomeCategoria]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "lisel") == 0)
-    {
 
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [lisel nomeVendedor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "lival") == 0)
-    {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
 
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
+            if (arg[1] != NULL && arg[2])
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\nInsira apenas [add valor]\n");
+            }
         }
-        else
-        {
-            printf("\nInsira apenas [lival precoMaximo]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "litime") == 0)
-    {
-
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [litime prazo]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "time") == 0)
-    {
-
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [time]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "buy") == 0)
-    {
-
-        if (nPalavras == 3)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [buy id valor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "cash") == 0)
-    {
-
-        if (nPalavras == 1)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [cash]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "add") == 0)
-    {
-
-        if (nPalavras == 2)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else
-        {
-            printf("\nInsira apenas [add valor]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "exit") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "exit") == 0)
         {
             sair();
         }
-        else
-        {
-            printf("\nInsira apenas [exit]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "help") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "help") == 0)
         {
             help();
         }
-        else
-        {
-            printf("\nInsira apenas [help]\n");
-        }
-    }
-    else if (strcmp(primeiraPalavra, "clear") == 0)
-    {
-
-        if (nPalavras == 1)
+        else if (strcmp(token, "clear") == 0)
         {
             clear();
         }
         else
         {
-            printf("\nInsira apenas [clear]\n");
+            printf("\nComando invalido!\n");
         }
-    }
-    else
-    {
-        printf("\nComando invalido!\n");
+        token = strtok(NULL, " ");
     }
 }
 
 int main(int argc, char **argv)
 {
-
-    char cmd[TAM];
     char password[50];
     char username[50];
-    ptruser user;
+    fd_set read_fds;
+    int nfd;           // para o return do select
+    struct timeval tv; // timeout do selects
+    fflush(stdout);
+    char mensagem[TAM];
+    int res;
+    pthread_t heartbeat_thread; // mandar o sinal para o backend
 
-    user = malloc(sizeof(USER));
-    if (user == NULL)
+    USER user;
+    ITEM item;
+
+    user.isLoggedIn = 0;
+    user.tempoLogged = 0;
+
+    signal(SIGQUIT, sigQuit_handler);
+    signal(SIGTERM, sigTerm_handler);
+    signal(SIGUSR1, sigUser1_handler);
+
+    user.pid = getpid();
+
+    sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, user.pid);
+
+    if (mkfifo(SELLER_BUYER_FIFO_COM, 0666) == -1)
     {
-        printf("\nErro na alocacao de memoria [USER] \n");
-        free(user);
-        return -1;
+        perror("\nFifo do utilizador nao criado!\n");
+        exit(EXIT_FAILURE);
     }
 
-    // varAmb();
-    // lePipes();
+    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR);
+
+    if (utilizador_fd == -1)
+    {
+        perror("\n[ERRO] Na abertura do fifo do utilizador!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    backend_fd = open(BACKEND_FIFO, O_RDWR | O_NONBLOCK);
+
+    if (backend_fd == -1)
+    {
+        fprintf(stderr, "\nO server nao esta a correr!\n");
+        unlink(SELLER_BUYER_FIFO_COM);
+        exit(EXIT_FAILURE);
+    }
 
     if (argc == 3)
     {
+        strcpy(user.nome, argv[1]);
 
-        strcpy(user->nome, argv[1]);
+        strcpy(user.pass, argv[2]);
 
-        strcpy(user->pass, argv[2]);
+        printf("\nNome do user: %s\n", user.nome);
 
-        printf("\nNome do user: %s\n", user->nome);
+        printf("\nSenha registada!\n");
 
-        printf("\n\nSenha registada!\n");
+        printf("\nUsername registado\n");
 
-        printf("\n\n Username registado\n");
+        if (write(backend_fd, &user, sizeof(user)) == -1)
+        {
+            printf("[ERRO] Write - FIFO Backend\n");
+            unlink(SELLER_BUYER_FIFO_COM);
+            exit(EXIT_FAILURE);
+        } // envia os detalhes do user
+
+        // receber se o login correu bem ou nao
+        if (pthread_create(&heartbeat_thread, NULL, &mandaSinal, &user) != 0)
+        {
+            perror("\nErro na thread\n");
+        }
 
         while (1)
         {
-            interface(cmd);
+            tv.tv_sec = 5;  // segundos
+            tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
+
+            FD_ZERO(&read_fds);               // inicializar o set
+            FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
+            FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
+
+            // ir buscar o return do select e validar
+
+            nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
+
+            if (nfd == -1)
+            {
+                perror("\nErro no select! Nao tenho nada para ler...\n");
+            }
+            if (nfd == 0)
+            {
+                printf("\nComando: ");
+            }
+
+            // depois do return do select, verificar se os fd ainda estao dentro do set
+
+            if (FD_ISSET(0, &read_fds)) // Teclado
+            {
+                fgets(user.comando, sizeof(user.comando), stdin);
+                user.comando[strcspn(user.comando, "\n")] = 0;
+                interface(user, item);
+                write(backend_fd, &user, sizeof(user));
+            }
+            if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
+            {
+
+                res = read(utilizador_fd, &user, sizeof(USER));
+
+                if (res < 0)
+                {
+                    perror("\nErro no read. No bytes ");
+                }
+
+                if (user.isLoggedIn == 0)
+                {
+                    printf("\nInsira outra vez o nome: ");
+                    fgets(user.nome, sizeof(user.nome), stdin);
+                    user.nome[strcspn(user.nome, "\n")] = 0;
+
+                    printf("\nInsira novamente a passe: ");
+                    fgets(user.pass, sizeof(user.pass), stdin);
+                    user.pass[strcspn(user.pass, "\n")] = 0;
+
+                    write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
+                }
+                else if (user.isLoggedIn == 1)
+                {
+                    printf("\nBem vindo [%s]\n", user.nome);
+                }
+            }
         }
     }
     else if (argc < 3)
@@ -267,8 +378,5 @@ int main(int argc, char **argv)
         printf("\n\n Demasiados argumentos, insira apenas 3 [./frontend nome pass]\n");
         return -2;
     }
-
     return 0;
-
-    // Comandos
 }
