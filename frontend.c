@@ -93,8 +93,6 @@ void interface(USER user, ITEM item)
 
     char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
     char *arg[5];
-
-    printf("%s", user.comando);
     token = strtok(user.comando, " \n");
 
     while (token != NULL)

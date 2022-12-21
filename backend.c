@@ -393,6 +393,135 @@ void verificaServidor()
     }
 }
 
+void utilizadorCmd(USER u)
+{
+    char *token;
+    char *arg[5];
+
+    token = strtok(u.comando, " \n");
+
+    while (token != NULL)
+    {
+        if (strcmp(u.comando, "sell") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
+            arg[4] = strtok(NULL, " \n");
+            arg[5] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
+            {
+                printf("\nRecebi sell\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(u.comando, "list") == 0)
+        {
+            printf("\nLi list\n");
+        }
+        else if (strcmp(u.comando, "licat") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(token, "lisel") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(token, "lival") == 0)
+        {
+
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(token, "litime") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(token, "time") == 0)
+        {
+            printf("\nA ser implementado...\n");
+        }
+        else if (strcmp(token, "buy") == 0)
+        {
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+            arg[3] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL)
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        else if (strcmp(token, "cash") == 0)
+        {
+            printf("\nA ser implementado...\n");
+        }
+        else if (strcmp(token, "add") == 0)
+        {
+
+            arg[1] = strtok(NULL, " \n");
+            arg[2] = strtok(NULL, " \n");
+
+            if (arg[1] != NULL && arg[2])
+            {
+                printf("\nA ser implementado...\n");
+            }
+            else
+            {
+                printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+            }
+        }
+        token = strtok(NULL, " ");
+    }
+}
+
 int main(int argc, char **argv)
 {
     int i;
@@ -541,10 +670,7 @@ int main(int argc, char **argv)
                     resetUserTime(&backend, u.pid);
                 }
 
-                if (strcmp(u.comando, "list") == 0)
-                {
-                    printf("\nLi list\n");
-                }
+                utilizadorCmd(u);
             }
         }
         if (FD_ISSET(sinais_fd, &read_fds))
