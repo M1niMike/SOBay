@@ -103,6 +103,7 @@ int main(int argc, char **argv)
     USER user;
     ITEM item;
     COMUNICA comunica;
+    int cont = 0;
 
     user.isLoggedIn = 0;
     user.tempoLogged = 0;
@@ -165,7 +166,7 @@ int main(int argc, char **argv)
 
         while (1)
         {
-            tv.tv_sec = 5;  // segundos
+            tv.tv_sec = 20; // segundos
             tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
 
             FD_ZERO(&read_fds);               // inicializar o set
@@ -182,7 +183,7 @@ int main(int argc, char **argv)
             }
             if (nfd == 0)
             {
-                printf("\nEspera de comandos ou de resposta do backend");
+                printf("\nEspera de comandos ou de resposta do backend\n");
             }
 
             // depois do return do select, verificar se os fd ainda estao dentro do set
@@ -192,43 +193,83 @@ int main(int argc, char **argv)
                 backend_fd = open(BACKEND_FIFO, O_WRONLY | O_NONBLOCK);
                 fgets(user.comando, sizeof(user.comando), stdin);
                 user.comando[strcspn(user.comando, "\n")] = 0;
+                write(backend_fd, &user, sizeof(user));
 
                 if (strcmp(user.comando, "exit") == 0)
                 {
                     sair();
                 }
-                write(backend_fd, &user, sizeof(user));
+
                 close(backend_fd);
-                
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
-            {   
-
-                read(utilizador_fd, &user, sizeof(user)); // le detalhes do use
-                printf("\nBem vindo [%s]\n", user.nome);
-                
-                if (user.isLoggedIn == 0)
+            {
+                if (cont == 0)
                 {
-                    printf("\nInsira outra vez o nome: ");
-                    fgets(user.nome, sizeof(user.nome), stdin);
-                    user.nome[strcspn(user.nome, "\n")] = 0;
+                    printf("Voltei antes do user.isLoggedIn\n");
+                    printf("\nBem vindo [%s]\n", user.nome);
+                    read(utilizador_fd, &user, sizeof(user));
 
-                    printf("\nInsira novamente a passe: ");
-                    fgets(user.pass, sizeof(user.pass), stdin);
-                    user.pass[strcspn(user.pass, "\n")] = 0;
+                    if (user.isLoggedIn == 0)
+                    {
+                        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+                        printf("\nInsira outra vez o nome: ");
+                        fgets(user.nome, sizeof(user.nome), stdin);
+                        user.nome[strcspn(user.nome, "\n")] = 0;
 
-                    write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
+                        printf("\nInsira novamente a passe: ");
+                        fgets(user.pass, sizeof(user.pass), stdin);
+                        user.pass[strcspn(user.pass, "\n")] = 0;
 
+                        write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
+                    }
+                    cont = 1;
                 }
-                else if(user.isLoggedIn == 1)
-                {   
+                else if (cont == 1 && user.isLoggedIn == 1)
+                {
                     close(backend_fd);
 
-                    //read(utilizador_fd, &user, sizeof(user));
-                    
-                    
-                    printf("\nTempo da plataforma atual: (%d) segundos\n", user.timeBackend);
-                    
+                    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+                    char *arg[5];
+                    token = strtok(user.comando, " \n");
+
+                    while (token != NULL)
+                    {
+
+                        if (strcmp(token, "time") == 0)
+                        {
+                            read(utilizador_fd, &comunica, sizeof(comunica));
+                            printf("\nTempo da plataforma atual: (%d) segundos\n", comunica.timeBackend);
+                        }
+                        else if (strcmp(token, "cash") == 0)
+                        {
+                            read(utilizador_fd, &comunica, sizeof(comunica));
+                            user.saldo = comunica.saldo;
+                            printf("\nSeu saldo atual: (%d)\n", comunica.saldo);
+                        }
+                        else if (strcmp(token, "add") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+
+                        }
+                        else
+                        {
+                            printf("\nComando invalido! Tente novamente!\n");
+                        }
+
+                        token = strtok(NULL, " ");
+                    }
                 }
             }
         }

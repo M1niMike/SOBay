@@ -256,7 +256,68 @@ void resetUserTime(ptrbackend backend, int pid)
     }
 }
 
-void cmdKick(ptrbackend backend, char *nome)
+void cmdSell(char *nomeItem, char *categoria, int precoBase, int compreJa, int duracao, ptrbackend backend, USER user, int maxItens)
+{
+
+    if (backend->numItens == maxItens)
+    {
+        printf("\nNao foi possivel adicionar mais itens à estrutura!");
+        return;
+    } // verifica que nao chegou ao maxItens que é 30, se chegou nem faz o for
+
+    backend->itens[backend->numItens].idItem = backend->numItens + 1; // igualar o id a posicao do loop
+    strcpy(backend->itens[backend->numItens].nomeItem, nomeItem);
+    strcpy(backend->itens[backend->numItens].categoria, categoria);
+    backend->itens[backend->numItens].valorAtual = precoBase;
+    backend->itens[backend->numItens].valorCompreJa = compreJa;
+    backend->itens[backend->numItens].duracao = duracao;
+    strcpy(backend->itens[backend->numItens].sellerName, user.nome);
+
+    backend->numItens++;
+
+} // testar pode nao estar certo e probs nao esta
+
+void cmdList(BACKEND backend)
+{
+    if (backend.numItens == 0)
+    {
+        printf("\n[AVISO] - nao ha itens na plataforma neste momento!\n");
+    }
+
+    for (int i = 0; i < backend.numItens; i++)
+    {
+        printf("\nItem Id: %d", backend.itens[i].idItem);
+        printf("\nNome item: %s", backend.itens[i].nomeItem);
+        printf("\nNome do vendedor: %s", backend.itens[i].sellerName);
+        printf("\nCategoria item: %s", backend.itens[i].categoria);
+        printf("\nPreco item: %d", backend.itens[i].valorAtual);
+        printf("\nPreco compre ja: %d", backend.itens[i].valorCompreJa);
+        printf("\nDuracao: %d\n", backend.itens[i].duracao);
+    }
+
+    /*Apos a remoção*/
+
+    // for (int i = 0; i < backend.numItens; i++)
+    // {
+    //     if (backend.utilizadores[i].pid != 0)
+    //     {
+    //         printf("\n[UTILIZADORES] - Nome: %s - Pass: %s - Saldo: %d - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pass, backend.utilizadores[i].saldo, backend.utilizadores[i].pid);
+    //     }
+    //     else
+    //     {
+    //         if (backend.utilizadores[i].nome == " ")
+    //         {
+    //             printf("\n[AVISO] - Nao ha users logados na plataforma neste momento.\n");
+    //         }
+    //         else
+    //         {
+    //             continue;
+    //         }
+    //     }
+    // }
+}
+
+void cmdKickBackend(ptrbackend backend, char *nome)
 {
 
     for (int i = 0; i < backend->numUsers; i++)
@@ -276,7 +337,7 @@ void cmdKick(ptrbackend backend, char *nome)
     }
 }
 
-void cmdUsers(BACKEND backend)
+void cmdUsersBackend(BACKEND backend)
 {
 
     if (backend.numUsers == 0)
@@ -288,7 +349,9 @@ void cmdUsers(BACKEND backend)
     {
         if (backend.utilizadores[i].pid != 0)
         {
-            printf("\n[UTILIZADORES] - Nome: %s - Pass: %s - Saldo: %d - PID: %d\n", backend.utilizadores[i].nome, backend.utilizadores[i].pass, backend.utilizadores[i].saldo, backend.utilizadores[i].pid);
+            printf("\nNome: %s", backend.utilizadores[i].nome);
+            printf("\nPass: %s", backend.utilizadores[i].pass);
+            printf("\nSaldo: %d\n", backend.utilizadores[i].saldo);
         }
         else
         {
@@ -326,11 +389,11 @@ void interface(BACKEND backend, USER user)
     {
         if (strcmp(token, "users") == 0)
         {
-            cmdUsers(backend);
+            cmdUsersBackend(backend);
         }
         else if (strcmp(token, "list") == 0)
         {
-            printf("\nA ser implementado...\n");
+            cmdList(backend);
         }
         else if (strcmp(token, "kick") == 0)
         {
@@ -338,7 +401,7 @@ void interface(BACKEND backend, USER user)
 
             if (arg[1] != NULL)
             {
-                cmdKick(&backend, arg[1]);
+                cmdKickBackend(&backend, arg[1]);
             }
             else
             {
@@ -384,6 +447,21 @@ void interface(BACKEND backend, USER user)
             printf("\n[AVISO] - Comando invalido!\n");
         }
         token = strtok(NULL, " ");
+    }
+}
+
+void cmdAddUtilizador(COMUNICA comunica, USER user, ptrbackend backend, int saldoToAdd)
+{
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, user.nome) == 0)
+        {
+            backend->utilizadores[i].saldo += saldoToAdd;
+            comunica.saldo = backend->utilizadores[i].saldo;
+            updateUserBalance(backend->utilizadores[i].nome, backend->utilizadores[i].saldo);
+            saveUsersFile(FUSERS);
+            break;
+        }
     }
 }
 
@@ -442,7 +520,7 @@ void verificaServidor()
     }
 }
 
-void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
+void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 {
     char *token;
     char *arg[5];
@@ -461,7 +539,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
 
             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
             {
-                printf("\nRecebi sell\n");
+                cmdSell(arg[1], arg[2], atoi(arg[3]), atoi(arg[4]), atoi(arg[5]), backend, u, 30);
             }
             else
             {
@@ -531,9 +609,8 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
         }
         else if (strcmp(token, "time") == 0)
         {
-            u.timeBackend = backend->time;
-            printf("\n%d\n", u.timeBackend);
-            write(utilizador_fd, &u, sizeof(u));
+            comunica.timeBackend = backend->time;
+            write(utilizador_fd, &comunica, sizeof(comunica));
             close(utilizador_fd);
         }
         else if (strcmp(token, "buy") == 0)
@@ -553,22 +630,42 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
         }
         else if (strcmp(token, "cash") == 0)
         {
-            printf("\nA ser implementado...\n");
+
+            for (int i = 0; i < backend->numUsers; i++)
+            {
+                if (strcmp(u.nome, backend->utilizadores[i].nome) == 0)
+                {
+                    comunica.saldo = backend->utilizadores[i].saldo;
+                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    close(utilizador_fd);
+                }
+
+                // close(utilizador_fd);
+            }
         }
         else if (strcmp(token, "add") == 0)
         {
 
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2])
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                cmdAddUtilizador(comunica, u, backend, atoi(arg[1]));
+                strcpy(comunica.mensagem, "Saldo atualizado com sucesso");
+                write(utilizador_fd, &comunica, sizeof(comunica));
+                close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+                strcpy(comunica.mensagem, "Insira [add] [valor]");
+                write(utilizador_fd, &comunica, sizeof(comunica));
+                close(utilizador_fd);
             }
+        }
+        else if (strcmp(token, "exit") == 0)
+        {
+            printf("\n%s encerrou o programa\n", u.nome);
         }
         token = strtok(NULL, " ");
     }
@@ -577,7 +674,8 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
 int main(int argc, char **argv)
 {
     int i;
-    ptrcomunica comunica = malloc(sizeof(COMUNICA));
+    // ptrcomunica comunica = malloc(sizeof(COMUNICA));
+    COMUNICA comunica;
     BACKEND backend;
     USER u;
     ITEM it;
@@ -592,7 +690,6 @@ int main(int argc, char **argv)
     backend.time = 0;
     pthread_t incrementaTempo;
     pthread_t recebeSinal;
-
 
     u.isLoggedIn = 0;
 
@@ -652,7 +749,7 @@ int main(int argc, char **argv)
     while (1)
     {
 
-        tv.tv_sec = 5;
+        tv.tv_sec = 20;
         tv.tv_usec = 0;
 
         FD_ZERO(&read_fds);
@@ -679,7 +776,7 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(backend_fd, &read_fds))
         {
-            
+
             if (read(backend_fd, &u, sizeof(u)) == -1)
             {
                 printf("[ERRO] - Read - FIFO Backend(2)\n");
@@ -688,13 +785,13 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
 
-                // sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+            // sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
 
-                // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-            
+            // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+
             if (u.isLoggedIn == 0)
             {
-                
+
                 // if (utilizador_fd == -1)
                 // {
                 //     perror("\n[ERRO] - Na abertura do fifo do utilizador!\n");
@@ -729,12 +826,11 @@ int main(int argc, char **argv)
             }
             else if (u.isLoggedIn == 1)
             {
-                sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
                 utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
                 printf("\n[%s] enviou o comando: %s\n", u.nome, u.comando);
 
-                utilizadorCmd(&backend, u, it); 
-                close(utilizador_fd);  
+                utilizadorCmd(&backend, u, it, comunica);
+                close(utilizador_fd);
             }
         }
         if (FD_ISSET(sinais_fd, &read_fds))

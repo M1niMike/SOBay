@@ -62,14 +62,12 @@ typedef struct promotores{
     char nome[TAM];
 }PROMOTORES, *ptrpromotores;
 
-typedef struct time{
-    int time;
-}TIME, *ptrtime;
 
 typedef struct comunica{
-    int time;
+    int timeBackend;
     char mensagem[TAM];
     char comando[TAM];
+    int saldo;
     
 }COMUNICA, *ptrcomunica;
 
