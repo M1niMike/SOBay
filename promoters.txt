@@ -1,2 +1,2 @@
-black_friday
-promotor_oficial
+promotores/black_friday
+promotores/promotor_oficial

@@ -1,18 +1,12 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # GNU Make 4.3
- 
 # Built for x86_64-pc-linux-gnu
- 
 # Copyright (C) 1988-2020 Free Software Foundation, Inc.
- 
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
- 
 # This is free software: you are free to change and redistribute it.
- 
 # There is NO WARRANTY, to the extent permitted by law.
- 
 
-# Make data base, printed on Wed Dec 21 16:03:30 2022
+# Make data base, printed on Wed Dec 21 21:53:10 2022
 
 # Variables
 
@@ -34,8 +28,6 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 PWD = /home/micael/SO/SO-TP-22-23
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
-# environment
-OLDPWD = /home/micael/.vscode-server/bin/e8a3071ea4344d9d48ef8a4df2c097372b0c5161
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # automatic
@@ -99,7 +91,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 63077 22
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 60769 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -127,7 +119,7 @@ _ = /home/micael/.vscode-server/bin/e8a3071ea4344d9d48ef8a4df2c097372b0c5161/nod
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-149a8d01-355d-4e16-8b5b-b627857b7ed6.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-c4ad7307-11f3-4a27-b851-d858cece082b.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -147,9 +139,9 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 63077 fe80::a00:27ff:fed1:32f%enp0s8 22
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 60769 fe80::a00:27ff:fed1:32f%enp0s8 22
 # variable set hash-table stats:
-# Load=66/1024=6%, Rehash=0, Collisions=1/99=1%
+# Load=65/1024=6%, Rehash=0, Collisions=1/98=1%
 
 # Pattern-specific Variable Values
 
@@ -157,9 +149,9 @@ SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 63077 fe80::a00:27ff:fed1:32f%
 
 # Directories
 
-# . (device 2049, inode 2629821): 21 files, no impossibilities.
+# . (device 2049, inode 2629821): 23 files, no impossibilities.
 
-# 21 files, no impossibilities in 1 directories.
+# 23 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -260,12 +252,12 @@ frontend:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 29 / storage = 296 B / avg = 10 B
-# current buf: size = 8162 B / used = 296 B / count = 29 / avg = 10 B
+# strcache buffers: 1 (0) / strings = 31 / storage = 317 B / avg = 10 B
+# current buf: size = 8162 B / used = 317 B / count = 31 / avg = 10 B
 
-# strcache performance: lookups = 43 / hit rate = 32%
+# strcache performance: lookups = 45 / hit rate = 31%
 # hash-table stats:
-# Load=29/8192=0%, Rehash=0, Collisions=0/43=0%
-# Finished Make data base on Wed Dec 21 16:03:30 2022
+# Load=31/8192=0%, Rehash=0, Collisions=0/45=0%
+# Finished Make data base on Wed Dec 21 21:53:10 2022
 
  

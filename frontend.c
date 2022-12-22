@@ -1,7 +1,7 @@
 #include "frontend.h"
 #include "backend.h"
 
-int utilizador_fd, backend_fd, sinal_fd;
+int utilizador_fd, backend_fd, sinal_fd, utilizador_2_fd;
 
 void sigQuit_handler()
 {
@@ -30,7 +30,6 @@ void *mandaSinal(void *dados)
 
     int pid = pdados->pid;
 
-   
     int heartBeatTime = atoi(getenv("HEARTBEAT"));
     while (1)
     {
@@ -98,10 +97,12 @@ int main(int argc, char **argv)
     fflush(stdout);
     char mensagem[TAM];
     int res;
+    int reader = 0;
     pthread_t heartbeat_thread; // mandar o sinal para o backend
 
     USER user;
     ITEM item;
+    COMUNICA comunica;
 
     user.isLoggedIn = 0;
     user.tempoLogged = 0;
@@ -120,7 +121,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR);
+    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
 
     if (utilizador_fd == -1)
     {
@@ -188,26 +189,24 @@ int main(int argc, char **argv)
 
             if (FD_ISSET(0, &read_fds)) // Teclado
             {
-
+                backend_fd = open(BACKEND_FIFO, O_WRONLY | O_NONBLOCK);
                 fgets(user.comando, sizeof(user.comando), stdin);
                 user.comando[strcspn(user.comando, "\n")] = 0;
-                
-                if(strcmp(user.comando, "exit")==0){
+
+                if (strcmp(user.comando, "exit") == 0)
+                {
                     sair();
                 }
                 write(backend_fd, &user, sizeof(user));
+                close(backend_fd);
                 
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
-            {
+            {   
 
-                res = read(utilizador_fd, &user, sizeof(USER));
-
-                if (res < 0)
-                {
-                    perror("\nErro no read. No bytes ");
-                }
-
+                read(utilizador_fd, &user, sizeof(user)); // le detalhes do use
+                printf("\nBem vindo [%s]\n", user.nome);
+                
                 if (user.isLoggedIn == 0)
                 {
                     printf("\nInsira outra vez o nome: ");
@@ -219,11 +218,17 @@ int main(int argc, char **argv)
                     user.pass[strcspn(user.pass, "\n")] = 0;
 
                     write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
-                }
-                else if (user.isLoggedIn == 1)
-                {
 
-                    printf("\nBem vindo [%s]\n", user.nome);
+                }
+                else if(user.isLoggedIn == 1)
+                {   
+                    close(backend_fd);
+
+                    //read(utilizador_fd, &user, sizeof(user));
+                    
+                    
+                    printf("\nTempo da plataforma atual: (%d) segundos\n", user.timeBackend);
+                    
                 }
             }
         }
@@ -240,9 +245,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-
 /*OLD INTERFACE*/
-
 
 // void interface(USER user, ITEM item)
 // {

@@ -69,6 +69,8 @@ typedef struct time{
 typedef struct comunica{
     int time;
     char mensagem[TAM];
+    char comando[TAM];
+    
 }COMUNICA, *ptrcomunica;
 
 #endif //SO_BACKEND_H

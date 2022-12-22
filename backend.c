@@ -2,7 +2,7 @@
 #include "backend.h"
 #include "users_lib.h"
 
-int utilizador_fd, sinais_fd, backend_fd;
+int utilizador_fd, sinais_fd, backend_fd, utilizador_2_fd;
 pid_t id = -1;
 char *FUSERS;
 char *FITEMS;
@@ -47,7 +47,7 @@ void getFilePaths()
     // printf("%d", HEARTBEAT);
 }
 
-void execPromotor()
+void execPromotor(char *promoterName)
 {
     int fd[2];
     char msgVolta[TAM];
@@ -55,9 +55,63 @@ void execPromotor()
     char resposta[TAM];
     int i = 0;
 
+    // para ler os promotores:
+    // criar uma função para ler o ficheiro de texto dos promoters
+    // depois ler a quantidade de promoters que existe no ficheiro de texto
+    // envolver o fork() num for com a quantidade de promoters que existem
+    // executar no execl(promotor[i], promotor[i], NULL)
+
+    // strcat(nomePromotores[i].nome, "/promotores/"); //arg1 + arg2
+
+    id = fork();
+
+    if (id == -1)
+    {
+        printf("\n[ERRO] - Falha na execucao do fork()");
+        return;
+    }
+
+    if (id > 0)
+    {
+        read(fd[0], resposta, sizeof(resposta));
+        close(fd[1]);
+        printf("\n%s\n", resposta);
+
+        // Encerra o promotor
+        union sigval val;
+        sigqueue(id, SIGUSR1, val);
+        wait(&id);
+    }
+
+    else if (id == 0)
+    {
+        close(1);
+        dup(fd[1]);
+        close(fd[0]);
+        close(fd[1]);
+
+        execl(promoterName, promoterName, NULL);
+
+        exit(-1);
+    }
+}
+
+void readPromotersFile(char *fileName)
+{
+
+    int maxPromoters = 0;
     ptrpromotores nomePromotores;
 
     nomePromotores = malloc(10 * sizeof(PROMOTORES));
+
+    FILE *f = fopen(fileName, "rt");
+
+    if (f == NULL)
+    {
+        printf("\nErro na abertura do ficheiro de texto PROMOTORES!\n");
+        fclose(f);
+        return;
+    }
 
     if (nomePromotores == NULL)
     {
@@ -66,60 +120,11 @@ void execPromotor()
         return;
     }
 
-    // para ler os promotores:
-    // criar uma função para ler o ficheiro de texto dos promoters
-    // depois ler a quantidade de promoters que existe no ficheiro de texto
-    // envolver o fork() num for com a quantidade de promoters que existem
-    // executar no execl(promotor[i], promotor[i], NULL);
-
-    FILE *f = fopen(FPROMOTERS, "rt");
-
-    if (f == NULL)
+    while (fscanf(f, "%s", nomePromotores[maxPromoters].nome) != EOF && maxPromoters <= 10)
     {
-        printf("\nNão consegui abrir o ficheiro de texto dos promotores.\n");
-        return;
-    }
-
-    while (fscanf(f, "%s", nomePromotores[i].nome) != EOF)
-    {
-
-        // strcat(nomePromotores[i].nome, "/promotores/"); //arg1 + arg2
-
-        id = fork();
-
-        if (id == -1)
-        {
-            printf("\n[ERRO] - Falha na execucao do fork()");
-            return;
-        }
-        printf("\n(%s)\n", nomePromotores[i].nome);
-
-        if (id > 0)
-        {
-            read(fd[0], resposta, sizeof(resposta));
-            close(fd[1]);
-            printf("\n%s\n", resposta);
-
-            // Encerra o promotor
-            union sigval val;
-            sigqueue(id, SIGUSR1, val);
-            wait(&id);
-        }
-
-        else if (id == 0)
-        {
-            close(1);
-            dup(fd[1]);
-            close(fd[0]);
-            close(fd[1]);
-
-            execl(nomePromotores[i].nome, nomePromotores[i].nome, NULL);
-
-            exit(-1);
-        }
-
-        i++;
-        fflush(stdout);
+        // printf("\nNome do promotor: %s", nomePromotores[maxPromoters].nome);
+        execPromotor(nomePromotores[maxPromoters].nome);
+        maxPromoters++;
     }
 }
 
@@ -223,7 +228,7 @@ void *aumentaTempo(void *dados)
 
     while (1)
     {
-        // para contar o tempo, mandá-lo dormir 1 segundo e incrementar a var do tempo
+        // para maxPromotersar o tempo, mandá-lo dormir 1 segundo e incrementar a var do tempo
         sleep(1);
         pdados->time++;
         for (int i = 0; i < pdados->numUsers; i++)
@@ -301,11 +306,11 @@ void cmdUsers(BACKEND backend)
     // print a avisa que nao tem users.
 }
 
-void cmdTime(BACKEND backend){
-    backend.time
+// void cmdTime(BACKEND backend){
+//     backend.time
 
-    write(utilizador_fd, &backend, (BACKEND));
-}
+//     write(utilizador_fd, &backend, sizeof(BACKEND));
+// }
 
 void interface(BACKEND backend, USER user)
 {
@@ -437,7 +442,7 @@ void verificaServidor()
     }
 }
 
-void utilizadorCmd(USER u, ITEM it)
+void utilizadorCmd(ptrbackend backend, USER u, ITEM it)
 {
     char *token;
     char *arg[5];
@@ -446,7 +451,7 @@ void utilizadorCmd(USER u, ITEM it)
 
     while (token != NULL)
     {
-        if (strcmp(u.comando, "sell") == 0)
+        if (strcmp(token, "sell") == 0)
         {
             arg[1] = strtok(NULL, " \n");
             arg[2] = strtok(NULL, " \n");
@@ -463,11 +468,11 @@ void utilizadorCmd(USER u, ITEM it)
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
             }
         }
-        else if (strcmp(u.comando, "list") == 0)
+        else if (strcmp(token, "list") == 0)
         {
             printf("\nRecebi list\n");
         }
-        else if (strcmp(u.comando, "licat") == 0)
+        else if (strcmp(token, "licat") == 0)
         {
             arg[1] = strtok(NULL, " \n");
             arg[2] = strtok(NULL, " \n");
@@ -526,7 +531,10 @@ void utilizadorCmd(USER u, ITEM it)
         }
         else if (strcmp(token, "time") == 0)
         {
-            printf("\nA ser implementado...\n");
+            u.timeBackend = backend->time;
+            printf("\n%d\n", u.timeBackend);
+            write(utilizador_fd, &u, sizeof(u));
+            close(utilizador_fd);
         }
         else if (strcmp(token, "buy") == 0)
         {
@@ -569,6 +577,7 @@ void utilizadorCmd(USER u, ITEM it)
 int main(int argc, char **argv)
 {
     int i;
+    ptrcomunica comunica = malloc(sizeof(COMUNICA));
     BACKEND backend;
     USER u;
     ITEM it;
@@ -578,16 +587,20 @@ int main(int argc, char **argv)
     int maxUsers = 20;
     int numUsersInTextFile;
     int maxItens = 30;
+    int status = 0;
     backend.numUsers = 0;
+    backend.time = 0;
     pthread_t incrementaTempo;
     pthread_t recebeSinal;
+
 
     u.isLoggedIn = 0;
 
     verificaServidor();
 
     getFilePaths();
-    numUsersInTextFile = loadUsersFile(FUSERS); // conta os users do ficheiro de texto.
+
+    numUsersInTextFile = loadUsersFile(FUSERS); // maxPromotersa os users do ficheiro de texto.
 
     backend.utilizadores = malloc(maxUsers * sizeof(*backend.utilizadores));
     backend.itens = malloc(maxItens * sizeof(*backend.itens));
@@ -638,6 +651,7 @@ int main(int argc, char **argv)
 
     while (1)
     {
+
         tv.tv_sec = 5;
         tv.tv_usec = 0;
 
@@ -650,7 +664,7 @@ int main(int argc, char **argv)
 
         if (nfd == 0)
         {
-            printf("\n[AVISO] - Estou a espera de utilizadores..."); // corrigir o num users
+            printf("\n[AVISO] - Estou a espera de utilizadores\n"); // corrigir o num users
         }
 
         if (nfd == -1)
@@ -665,7 +679,7 @@ int main(int argc, char **argv)
 
         if (FD_ISSET(backend_fd, &read_fds))
         {
-
+            
             if (read(backend_fd, &u, sizeof(u)) == -1)
             {
                 printf("[ERRO] - Read - FIFO Backend(2)\n");
@@ -674,32 +688,39 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
 
+                // sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+
+                // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+            
             if (u.isLoggedIn == 0)
             {
-                sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
-
-                utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
-
-                if (utilizador_fd == -1)
-                {
-                    perror("\n[ERRO] - Na abertura do fifo do utilizador!\n");
-                    unlink(BACKEND_FIFO);
-                    unlink(SINAL_FIFO);
-                    exit(EXIT_FAILURE);
-                }
+                
+                // if (utilizador_fd == -1)
+                // {
+                //     perror("\n[ERRO] - Na abertura do fifo do utilizador!\n");
+                //     unlink(BACKEND_FIFO);
+                //     unlink(SINAL_FIFO);
+                //     exit(EXIT_FAILURE);
+                // }
 
                 if (isUserValid(u.nome, u.pass) == 1)
                 {
                     printf("\n[LOGIN] - Utilizador [%s] e valido, a verificar...\n", u.nome);
                     u.isLoggedIn = 1;
+                    sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+                    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
                     write(utilizador_fd, &u, sizeof(u));
                     adicionaPessoa(&backend, u, maxUsers);
+                    close(utilizador_fd);
                 }
                 else if (isUserValid(u.nome, u.pass) == 0)
                 {
                     printf("\n[LOGIN] - Utilizador [%s] nao e valido\n", u.nome);
                     u.isLoggedIn = 0;
+                    sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+                    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
                     write(utilizador_fd, &u, sizeof(u));
+                    close(utilizador_fd);
                 }
                 else
                 {
@@ -708,10 +729,12 @@ int main(int argc, char **argv)
             }
             else if (u.isLoggedIn == 1)
             {
-
+                sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
+                utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
                 printf("\n[%s] enviou o comando: %s\n", u.nome, u.comando);
 
-                utilizadorCmd(u, it);
+                utilizadorCmd(&backend, u, it); 
+                close(utilizador_fd);  
             }
         }
         if (FD_ISSET(sinais_fd, &read_fds))
