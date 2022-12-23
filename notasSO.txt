@@ -7,16 +7,16 @@ Tramento dos Comandos com outras structs:
 	3(Done) - Receber o resultado no Frontend
 	4 - fazer para todos os comandos
 		4.1 - fazer comando list e seus derivações
+		4.2 - fazer comando prom e suas derivações
 
 
 Tramento das Notificações
 
-Promotores/Promoções
+Promoções
 
 
 Notas de Correção:
-Achar posição para o readPromotersFile(FPROMOTERS) ou maybe fazer com uma thread?
-Finalizar logica comando buy (licitações, compreja, atualizar o saldo do user)
+Corrigir print promotor
 
 
 

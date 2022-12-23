@@ -8,7 +8,7 @@ char *FUSERS;
 char *FITEMS;
 char *FPROMOTERS;
 int HEARTBEAT;
-char *FPROMOTERS;
+
 
 int max(int a, int b)
 {
@@ -47,13 +47,12 @@ void getFilePaths()
     // printf("%d", HEARTBEAT);
 }
 
-void execPromotor(char *promoterName)
+void execPromotor(char* name)
 {
     int fd[2];
-    char msgVolta[TAM];
     pipe(fd);
-    char resposta[TAM];
     int i = 0;
+    char mensagem[TAM];
 
     // para ler os promotores:
     // criar uma função para ler o ficheiro de texto dos promoters
@@ -73,9 +72,9 @@ void execPromotor(char *promoterName)
 
     if (id > 0)
     {
-        read(fd[0], resposta, sizeof(resposta));
+        read(fd[0], mensagem, sizeof(mensagem));
         close(fd[1]);
-        printf("\n%s\n", resposta);
+        printf("\n%s", mensagem);
 
         // Encerra o promotor
         union sigval val;
@@ -90,21 +89,31 @@ void execPromotor(char *promoterName)
         close(fd[0]);
         close(fd[1]);
 
-        execl(promoterName, promoterName, NULL);
+        execl(name, name, NULL);
 
         exit(-1);
     }
 }
 
-void readPromotersFile(char *fileName)
+void *promocoes(void *dados){ //thread para estar continuamente a executar promotor para os users verem promocoes
+    ptrbackend backend = (ptrbackend) dados;
+    
+    printf("%d\n", backend->numPromoters);
+    while(1){
+        for(int i = 0; i < backend->numPromoters; i++){
+            printf("%s", backend->promotores[i].nome);
+            execPromotor( backend->promotores[i].nome);
+            //printf("MENSAGEM DO PROMOTOR %s\n",backend->promotores[i].msg);
+            sleep(30);
+            continue;
+        }
+    }
+}
+
+void readPromotersFile(ptrbackend backend)
 {
 
-    int maxPromoters = 0;
-    ptrpromotores nomePromotores;
-
-    nomePromotores = malloc(10 * sizeof(PROMOTORES));
-
-    FILE *f = fopen(fileName, "rt");
+    FILE *f = fopen(FPROMOTERS, "rt");
 
     if (f == NULL)
     {
@@ -113,19 +122,12 @@ void readPromotersFile(char *fileName)
         return;
     }
 
-    if (nomePromotores == NULL)
+    while (fscanf(f, "%s", backend->promotores[backend->numPromoters].nome) != EOF)
     {
-        perror("\nErro na alocação de memória para os promotores.\n");
-        free(nomePromotores);
-        return;
+        backend->numPromoters++;
     }
 
-    while (fscanf(f, "%s", nomePromotores[maxPromoters].nome) != EOF && maxPromoters <= 10)
-    {
-        // printf("\nNome do promotor: %s", nomePromotores[maxPromoters].nome);
-        execPromotor(nomePromotores[maxPromoters].nome);
-        maxPromoters++;
-    }
+    fclose(f);
 }
 
 void help()
@@ -177,7 +179,7 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
     {
         if (backend->itens[i].idItem != 0)
         {
-            fprintf(f, "%d %s %s %d %d %d %s\n",
+            fprintf(f, "%d %s %s %d %d %d %s %s\n",
                     backend->itens[i].idItem,
                     backend->itens[i].nomeItem,
                     backend->itens[i].categoria,
@@ -205,22 +207,21 @@ void leFicheiroVendas(ptrbackend backend)
         printf("\n[AVISO] - Nao foi possivel abrir ficheiro [%s]!\n", FITEMS);
         return;
     }
-    
 
-    while (fscanf(f, "%d %s %s %d %d %d %s",
+    while (fscanf(f, "%d %s %s %d %d %d %s %s",
                   &(backend->itens[backend->numItens].idItem),
                   backend->itens[backend->numItens].nomeItem,
                   backend->itens[backend->numItens].categoria,
                   &(backend->itens[backend->numItens].valorAtual),
                   &(backend->itens[backend->numItens].valorCompreJa),
                   &(backend->itens[backend->numItens].duracao),
-                  backend->itens[backend->numItens].sellerName) != EOF)
+                  backend->itens[backend->numItens].sellerName,
+                  backend->itens[backend->numItens].highestBidder) != EOF)
     {
         backend->numItens++;
         // if
         // printf("\n%d\n", backend->numItens);
     }
-    
 
     fclose(f);
 }
@@ -326,26 +327,47 @@ void *aumentaTempo(void *dados)
     }
 }
 
-void* aumentaTempoItem(void* dados){
-    ptrbackend backend = (ptrbackend) dados;
+void *aumentaTempoItem(void *dados)
+{
+    ptrbackend backend = (ptrbackend)dados; // dizer ao void *dados que ele é do tipo backend para deposi conseguir aceder ao backend
 
-    while(1){
+    while (1)
+    {
         sleep(1);
-        //diminuir o tempo tem de ser aqui.
 
-        for(int i = 0; i < backend->numItens; i++){
-            if (backend->itens[i].idItem != 0 && backend->itens[i].duracao >= 0){
+        for (int i = 0; i < backend->numItens; i++)
+        {
+            if (backend->itens[i].idItem != 0 && backend->itens[i].duracao > 0)
+            {
                 backend->itens[i].duracao--;
-                if (backend->itens[i].duracao == 0){
-                    removeItensFromArray(backend, backend->itens[i]);
+                if (backend->itens[i].duracao == 0)
+                {
+                    if (strcmp(backend->itens[i].highestBidder, "\0") == 0)
+                    {
+                        removeItensFromArray(backend, backend->itens[i]);
+                        printf("\nNinguem licitou neste item.\n");
+                        break;
+                    }
+                    printf("\n%s foi o maior licitador do item %s!\n", backend->itens[i].highestBidder, backend->itens[i].nomeItem);
+
+                    for (int j = 0; j < backend->numUsers; j++)
+                    {
+                        if (strcmp(backend->utilizadores[j].nome, backend->itens[i].highestBidder) == 0)
+                        {
+                            backend->utilizadores[j].saldo -= backend->itens[i].valorAtual;
+                            updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                            saveUsersFile(FUSERS);
+                            //removeItensFromArray(backend, backend->itens[i]);
+                            giveMoneyToSeller(backend);
+                            break;
+                        }
+                    }
                 }
             }
-            else {
-                break;
+            else
+            {
+                continue;
             }
-            /*if(backend->itens[i].duracao == 0){
-                if (backend->itens[i].)
-            }*/
         }
     }
 }
@@ -377,7 +399,6 @@ void cmdListBackend(ptrbackend backend)
         counter = 1;
     }
 
-
     for (int i = 0; i < backend->numItens; i++)
     {
         if (backend->itens[i].idItem != 0) // se existir
@@ -388,13 +409,14 @@ void cmdListBackend(ptrbackend backend)
             printf("\nCategoria item: %s", backend->itens[i].categoria);
             printf("\nPreco item: %d", backend->itens[i].valorAtual);
             printf("\nPreco compre ja: %d", backend->itens[i].valorCompreJa);
-            printf("\nDuracao: %d\n", backend->itens[i].duracao);
+            printf("\nDuracao: %d", backend->itens[i].duracao);
+            printf("\nMaior licitador: %s\n", backend->itens[i].highestBidder);
         }
         else
         {
-            if ((strcmp(backend->itens[i].nomeItem, "\0") == 0) && i+1 == backend->numItens)
+            if ((strcmp(backend->itens[i].nomeItem, "\0") == 0) && i + 1 == backend->numItens)
             {
-                    printf("\n[AVISO] - Nao ha itens na plataforma neste momento.\n");
+                printf("\n[AVISO] - Nao ha itens na plataforma neste momento.\n");
             }
             else
             {
@@ -447,7 +469,7 @@ void cmdUsersBackend(BACKEND backend)
         }
         else
         {
-            if ((strcmp(backend.utilizadores[i].nome, "\0") == 0) && i+1 == backend.numUsers)
+            if ((strcmp(backend.utilizadores[i].nome, "\0") == 0) && i + 1 == backend.numUsers)
             {
                 printf("\n[AVISO] - Nao ha users logados na plataforma neste momento.\n");
             }
@@ -478,7 +500,7 @@ void interface(BACKEND backend, USER user, ITEM item)
             cmdUsersBackend(backend);
         }
         else if (strcmp(token, "list") == 0)
-        {   
+        {
             cmdListBackend(&backend);
         }
         else if (strcmp(token, "kick") == 0)
@@ -582,6 +604,41 @@ void cmdAdd(COMUNICA comunica, USER user, ptrbackend backend, int saldoToAdd)
     }
 }
 
+void giveMoneyToSeller(ptrbackend backend)
+{
+    for (int j = 0; j < backend->numUsers; j++)
+    {
+        for (int i = 0; i < backend->numItens; i++)
+        {
+            if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+            {
+                backend->utilizadores[j].saldo += backend->itens[i].valorAtual;
+                updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                saveUsersFile(FUSERS);
+                removeItensFromArray(backend, backend->itens[i]);
+                break;
+            }
+        }
+    }
+}
+void giveMoneyToSellerCompreJa(ptrbackend backend)
+{
+    for (int j = 0; j < backend->numUsers; j++)
+    {
+        for (int i = 0; i < backend->numItens; i++)
+        {
+            if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+            {
+                backend->utilizadores[j].saldo += backend->itens[i].valorCompreJa;
+                updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                saveUsersFile(FUSERS);
+                removeItensFromArray(backend, backend->itens[i]);
+                break;
+            }
+        }
+    }
+}
+
 void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comunica)
 {
     if (id <= 0 || id > 30)
@@ -593,25 +650,49 @@ void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comuni
 
     for (int i = 0; i < backend->numItens; i++)
     {
-        if (backend->itens[i].idItem == id)
+        for (int j = 0; j < backend->numUsers; j++)
         {
-
-            if (backend->itens[i].valorAtual <= valor) // e ele existir
+            if ((strcmp(backend->utilizadores[j].nome, user.nome) == 0 ) && backend->utilizadores[j].saldo <= 0)
             {
-                printf("\n[AVISO] - Item %s vendido!\n", backend->itens[i].nomeItem);
-                resetDadosItens(backend, &backend->itens[i]);
-                comunica->retorno = 1; // codigo de retorno se correr bem
+                comunica->retorno = 3;
                 break;
             }
-            else
+            else if((strcmp(backend->utilizadores[j].nome, user.nome) == 0 ) && backend->utilizadores[j].saldo > 0)
             {
-                comunica->retorno = 0; // codigo de retorno se correr mal (dinheiro insuficiente)
-                break;
+                if (backend->itens[i].idItem == id) // se ele existir
+                {
+                    if (backend->itens[i].valorAtual <= valor && backend->itens[i].valorCompreJa != valor) // se o valor inserido for maior ou igual ao valor atual do item ele faz
+                    {
+                        backend->itens[i].valorAtual = valor;
+                        strcpy(backend->itens[i].highestBidder, user.nome);
+                        comunica->retorno = 2;
+                        break;
+                    }
+                    else if (backend->itens[i].valorCompreJa > 0 && backend->itens[i].valorCompreJa == valor) // se o valor inserido for igual ao compreja e se o compre ja for mair que zero
+                    {
+
+                        if (strcmp(backend->utilizadores[j].nome, user.nome) == 0)
+                        {
+
+                            backend->utilizadores[j].saldo -= backend->itens[i].valorCompreJa;
+                            updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                            saveUsersFile(FUSERS);
+                            printf("%s foi comprado com o compreja por %s\n", backend->itens[i].nomeItem, backend->utilizadores[j].nome);
+                            comunica->retorno = 1;
+                            break;
+                        }
+                    }
+
+                    else if (backend->itens[i].valorAtual > valor) // se for menor
+                    {
+                        comunica->retorno = 0; // codigo de retorno se correr mal (dinheiro insuficiente)
+                        break;
+                    }
+                }
             }
         }
     }
 }
-
 
 void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 {
@@ -721,8 +802,10 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 comunica.retorno = 0;
                 cmdBuy(u, atoi(arg[1]), atoi(arg[2]), backend, &comunica);
+                
                 if (comunica.retorno == 1)
-                {
+                {   
+                    giveMoneyToSellerCompreJa(backend);
                     strcpy(comunica.mensagem, "Item comprado com sucesso!");
                     write(utilizador_fd, &comunica, sizeof(comunica));
                     close(utilizador_fd);
@@ -736,6 +819,18 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 else if (comunica.retorno == -1)
                 {
                     strcpy(comunica.mensagem, "ID nao existe!");
+                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    close(utilizador_fd);
+                }
+                else if (comunica.retorno == 2)
+                {
+                    strcpy(comunica.mensagem, "Licitacao feita!");
+                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    close(utilizador_fd);
+                }
+                else if (comunica.retorno == 3)
+                {
+                    strcpy(comunica.mensagem, "Saldo negativo - use o comando add!");
                     write(utilizador_fd, &comunica, sizeof(comunica));
                     close(utilizador_fd);
                 }
@@ -795,7 +890,6 @@ int main(int argc, char **argv)
 {
     int i;
     COMUNICA comunica;
-    
     BACKEND backend;
     USER u;
     ITEM it;
@@ -806,16 +900,17 @@ int main(int argc, char **argv)
     int numUsersInTextFile;
     int maxItens = 30;
     int status = 0;
+    int maxPromotores = 10;
     backend.numUsers = 0;
     backend.time = 0;
     backend.numItens = 0;
     pthread_t incrementaTempo;
     pthread_t recebeSinal;
     pthread_t tempoItem;
-    pthread_t enviaNotificacao;
-    
+    pthread_t promocoesThread;
+
     u.isLoggedIn = 0;
-    
+
     verificaServidor();
 
     getFilePaths();
@@ -824,10 +919,12 @@ int main(int argc, char **argv)
 
     backend.utilizadores = malloc(maxUsers * sizeof(*backend.utilizadores));
     backend.itens = malloc(maxItens * sizeof(*backend.itens));
+    backend.promotores = malloc(maxPromotores * sizeof(*backend.promotores));
     comunica.itens = malloc(maxItens * sizeof(*comunica.itens));
 
+    leFicheiroVendas(&backend);
 
-    leFicheiroVendas(&backend);   
+    readPromotersFile(&backend);
 
     // backend.numPromoters = malloc(10 * sizeof(*backend.));
 
@@ -871,12 +968,16 @@ int main(int argc, char **argv)
 
     if (pthread_create(&incrementaTempo, NULL, &aumentaTempo, &backend) != 0)
     {
-        printf("\n[ERRO] - Falha na criacao da thread.\n");
+        printf("\n[ERRO] - Falha na criacao da thread AUMENTA TIME\n");
     }
-    
 
-    if (pthread_create(&tempoItem, NULL, &aumentaTempoItem, &backend) != 0){
-        printf("\n[ERRO] - Falha na criacao da thread.\n");
+    if (pthread_create(&tempoItem, NULL, &aumentaTempoItem, &backend) != 0)
+    {
+        printf("\n[ERRO] - Falha na criacao da thread TEMPO ITEM.\n");
+    }
+
+    if (pthread_create(&promocoesThread, NULL, &promocoes, &backend) != 0){
+        printf("\n[ERRO] - Falha na criacao da thread PROMOTORES");
     }
 
     while (1)
@@ -917,10 +1018,6 @@ int main(int argc, char **argv)
                 unlink(SINAL_FIFO);
                 exit(EXIT_FAILURE);
             } // ler os detalhes do utilizador
-
-            // sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, u.pid);
-
-            // utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
 
             if (u.isLoggedIn == 0)
             {
@@ -997,4 +1094,3 @@ int main(int argc, char **argv)
     /*for (int i = 0; i < 15; i++){
         valorFich[i] = atoi(linha);
     }*/
-
