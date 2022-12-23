@@ -68,7 +68,8 @@ typedef struct comunica{
     char mensagem[TAM];
     char comando[TAM];
     int saldo;
-    
+    int retorno;
+    ptritem itens;
 }COMUNICA, *ptrcomunica;
 
 #endif //SO_BACKEND_H

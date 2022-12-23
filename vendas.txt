@@ -1,2 +1,0 @@
-1 blusa vestimenta 10 20 50 GonzoEnes Mike
-2 copo cozinha 20 40 60 GonzoEnes Joao

@@ -1,7 +1,7 @@
 #include "frontend.h"
 #include "backend.h"
 
-int utilizador_fd, backend_fd, sinal_fd, utilizador_2_fd;
+int utilizador_fd, backend_fd, sinal_fd;
 
 void sigQuit_handler()
 {
@@ -51,6 +51,7 @@ void *mandaSinal(void *dados)
         close(sinal_fd);
     }
 }
+
 
 void help()
 {
@@ -261,7 +262,46 @@ int main(int argc, char **argv)
                                 read(utilizador_fd, &comunica, sizeof(comunica));
                                 printf("\n%s\n", comunica.mensagem);
                             }
+                        }
+                        else if (strcmp(token, "buy") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+                            arg[2] = strtok(NULL, " \n");
 
+                            if (arg[1] != NULL && arg[2] != NULL)
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                        }
+                        else if (strcmp(token, "sell") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+                            arg[2] = strtok(NULL, " \n");
+                            arg[3] = strtok(NULL, " \n");
+                            arg[4] = strtok(NULL, " \n");
+                            arg[5] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                        }
+                        else if (strcmp(token, "list") == 0)
+                        {
+                            read(utilizador_fd, &comunica.itens, sizeof(comunica.itens));
+                            
                         }
                         else
                         {
