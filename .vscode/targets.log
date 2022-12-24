@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Dec 23 22:35:24 2022
+# Make data base, printed on Sat Dec 24 18:05:15 2022
 
 # Variables
 
@@ -91,7 +91,7 @@ MOTD_SHOWN = pam
 # automatic
 ^F = $(notdir $^)
 # environment
-SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 54788 22
+SSH_CLIENT = fe80::948e:c9eb:4991:289f%enp0s8 60645 22
 # automatic
 ?F = $(notdir $?)
 # environment
@@ -119,7 +119,7 @@ _ = /home/micael/.vscode-server/bin/e8a3071ea4344d9d48ef8a4df2c097372b0c5161/nod
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-52430cbe-4f40-4a1e-8c97-bc03a445ccb6.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1000/vscode-ipc-8c611392-6b5d-42c3-a591-7330e1dc3477.sock
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -139,7 +139,7 @@ SUFFIXES :=
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync check-symlink load
 # environment
-SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 54788 fe80::a00:27ff:fed1:32f%enp0s8 22
+SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 60645 fe80::a00:27ff:fed1:32f%enp0s8 22
 # variable set hash-table stats:
 # Load=65/1024=6%, Rehash=0, Collisions=1/98=1%
 
@@ -149,9 +149,9 @@ SSH_CONNECTION = fe80::948e:c9eb:4991:289f%enp0s8 54788 fe80::a00:27ff:fed1:32f%
 
 # Directories
 
-# . (device 2049, inode 2629821): 21 files, no impossibilities.
+# . (device 2049, inode 2629821): 33 files, no impossibilities.
 
-# 21 files, no impossibilities in 1 directories.
+# 33 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -252,12 +252,12 @@ frontend:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 29 / storage = 287 B / avg = 9 B
-# current buf: size = 8162 B / used = 287 B / count = 29 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 41 / storage = 552 B / avg = 13 B
+# current buf: size = 8162 B / used = 552 B / count = 41 / avg = 13 B
 
-# strcache performance: lookups = 43 / hit rate = 32%
+# strcache performance: lookups = 55 / hit rate = 25%
 # hash-table stats:
-# Load=29/8192=0%, Rehash=0, Collisions=0/43=0%
-# Finished Make data base on Fri Dec 23 22:35:24 2022
+# Load=41/8192=1%, Rehash=0, Collisions=0/55=0%
+# Finished Make data base on Sat Dec 24 18:05:15 2022
 
  

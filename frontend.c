@@ -318,10 +318,10 @@ int main(int argc, char **argv)
                                 exit(EXIT_FAILURE);
                             }
                             printf("AQUI\n");
-                            for (int i = 0; i < comunica.numItens; i++)
-                            {
-                                printf("aqui: %s", comunica.itens[i].nomeItem);
-                            }
+                        //     for (int i = 0; i < comunica.numItens; i++)
+                        //     {
+                        //         printf("aqui: %s", comunica.itens[i].nomeItem);
+                        //     }
                             
                         }
                         else

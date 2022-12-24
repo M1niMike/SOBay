@@ -261,10 +261,9 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
         {
             printf("\n[AVISO] - Utilizador [%s] ja estava logado\n", backend->utilizadores[i].nome);
             kill(u.pid, SIGQUIT); // temp
-            break;
+            // break;
         }
     }
-
     backend->utilizadores[backend->numUsers] = u;
     backend->utilizadores[backend->numUsers].saldo = getUserBalance(backend->utilizadores[backend->numUsers].nome);
     backend->numUsers++;
@@ -315,7 +314,7 @@ void removePessoaFromArray(ptrbackend backend, USER user)
         {
             if (backend->utilizadores[i].pid == user.pid) // e ele existir
             {
-                printf("\n[AVISO] - %s removido por inatividade\n", backend->utilizadores[i].nome);
+                printf("\n[AVISO] - %s removido por inatividade, nao recebi o HEARTBEAT\n", backend->utilizadores[i].nome);
                 resetDados(backend, &backend->utilizadores[i]);
                 // backend->numUsers--;
                 break;
