@@ -52,7 +52,6 @@ void *mandaSinal(void *dados)
     }
 }
 
-
 void help()
 {
     printf("\n---------------------\n");
@@ -99,11 +98,15 @@ int main(int argc, char **argv)
     char mensagem[TAM];
     int res;
     int reader = 0;
+    int maxItens = 30;
     pthread_t heartbeat_thread; // mandar o sinal para o backend
 
     USER user;
     ITEM item;
     COMUNICA comunica;
+    
+    
+
     int cont = 0;
 
     user.isLoggedIn = 0;
@@ -112,6 +115,9 @@ int main(int argc, char **argv)
     signal(SIGQUIT, sigQuit_handler);
     signal(SIGTERM, sigTerm_handler);
     signal(SIGUSR1, sigUser1_handler);
+
+    comunica.itens = malloc(maxItens * sizeof(*comunica.itens));
+    
 
     user.pid = getpid();
 
@@ -300,7 +306,22 @@ int main(int argc, char **argv)
                         }
                         else if (strcmp(token, "list") == 0)
                         {
-                            read(utilizador_fd, &comunica.itens, sizeof(comunica.itens));
+
+                            // for (int i = 0; i < comunica.numItens; i++)
+                            // {
+                            // }
+
+                            if (read(utilizador_fd, &comunica.itens, sizeof(comunica.itens)) == -1)
+                            {
+                                perror("Erro no Read do List\n");
+                                unlink(SELLER_BUYER_FIFO_COM);
+                                exit(EXIT_FAILURE);
+                            }
+                            printf("AQUI\n");
+                            for (int i = 0; i < comunica.numItens; i++)
+                            {
+                                printf("aqui: %s", comunica.itens[i].nomeItem);
+                            }
                             
                         }
                         else

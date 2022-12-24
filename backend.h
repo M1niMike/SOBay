@@ -71,10 +71,11 @@ typedef struct comunica{
     char comando[TAM];
     int saldo;
     int retorno;
+    int numItens;
     ptritem itens;
 }COMUNICA, *ptrcomunica;
 
-void execPromotor(char* name);
+char* execPromotor(char* name);
 void readPromotersFile(ptrbackend backend);
 void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens);
 void leFicheiroVendas(ptrbackend backend);

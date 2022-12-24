@@ -16,7 +16,7 @@ Promoções
 
 
 Notas de Correção:
-Corrigir print promotor
+Corrigir o recebimento do frontend para o comando list
 
 
 

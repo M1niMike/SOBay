@@ -9,7 +9,6 @@ char *FITEMS;
 char *FPROMOTERS;
 int HEARTBEAT;
 
-
 int max(int a, int b)
 {
     return (a > b) ? a : b;
@@ -47,12 +46,12 @@ void getFilePaths()
     // printf("%d", HEARTBEAT);
 }
 
-void execPromotor(char* name)
+char *execPromotor(char *name)
 {
     int fd[2];
     pipe(fd);
     int i = 0;
-    char mensagem[TAM];
+    static char mensagem[TAM];
 
     // para ler os promotores:
     // criar uma função para ler o ficheiro de texto dos promoters
@@ -67,7 +66,7 @@ void execPromotor(char* name)
     if (id == -1)
     {
         printf("\n[ERRO] - Falha na execucao do fork()");
-        return;
+        return NULL;
     }
 
     if (id > 0)
@@ -93,17 +92,22 @@ void execPromotor(char* name)
 
         exit(-1);
     }
+
+    return mensagem;
 }
 
-void *promocoes(void *dados){ //thread para estar continuamente a executar promotor para os users verem promocoes
-    ptrbackend backend = (ptrbackend) dados;
-    
+void *promocoes(void *dados)
+{ // thread para estar continuamente a executar promotor para os users verem promocoes
+    ptrbackend backend = (ptrbackend)dados;
+
     printf("%d\n", backend->numPromoters);
-    while(1){
-        for(int i = 0; i < backend->numPromoters; i++){
+    while (1)
+    {
+        for (int i = 0; i < backend->numPromoters; i++)
+        {
             printf("%s", backend->promotores[i].nome);
-            execPromotor( backend->promotores[i].nome);
-            //printf("MENSAGEM DO PROMOTOR %s\n",backend->promotores[i].msg);
+            strcpy(backend->promotores[i].msg, execPromotor(backend->promotores[i].nome));
+            printf("MENSAGEM DO PROMOTOR %s\n", backend->promotores[i].msg);
             sleep(30);
             continue;
         }
@@ -179,15 +183,32 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
     {
         if (backend->itens[i].idItem != 0)
         {
-            fprintf(f, "%d %s %s %d %d %d %s %s\n",
-                    backend->itens[i].idItem,
-                    backend->itens[i].nomeItem,
-                    backend->itens[i].categoria,
-                    backend->itens[i].valorAtual,
-                    backend->itens[i].valorCompreJa,
-                    backend->itens[i].duracao,
-                    backend->itens[i].sellerName,
-                    backend->itens[i].highestBidder);
+            if (strcmp(backend->itens[i].highestBidder, "\0") == 0)
+            {
+                strcpy(backend->itens[i].highestBidder, "-");
+
+                fprintf(f, "%d %s %s %d %d %d %s %s\n",
+                        backend->itens[i].idItem,
+                        backend->itens[i].nomeItem,
+                        backend->itens[i].categoria,
+                        backend->itens[i].valorAtual,
+                        backend->itens[i].valorCompreJa,
+                        backend->itens[i].duracao,
+                        backend->itens[i].sellerName,
+                        backend->itens[i].highestBidder);
+            }
+            else
+            {
+                fprintf(f, "%d %s %s %d %d %d %s %s\n",
+                        backend->itens[i].idItem,
+                        backend->itens[i].nomeItem,
+                        backend->itens[i].categoria,
+                        backend->itens[i].valorAtual,
+                        backend->itens[i].valorCompreJa,
+                        backend->itens[i].duracao,
+                        backend->itens[i].sellerName,
+                        backend->itens[i].highestBidder);
+            }
         }
     }
 
@@ -342,7 +363,7 @@ void *aumentaTempoItem(void *dados)
                 backend->itens[i].duracao--;
                 if (backend->itens[i].duracao == 0)
                 {
-                    if (strcmp(backend->itens[i].highestBidder, "\0") == 0)
+                    if ((strcmp(backend->itens[i].highestBidder, "\0") == 0) || strcmp(backend->itens[i].highestBidder, "-") == 0)
                     {
                         removeItensFromArray(backend, backend->itens[i]);
                         printf("\nNinguem licitou neste item.\n");
@@ -357,7 +378,6 @@ void *aumentaTempoItem(void *dados)
                             backend->utilizadores[j].saldo -= backend->itens[i].valorAtual;
                             updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
                             saveUsersFile(FUSERS);
-                            //removeItensFromArray(backend, backend->itens[i]);
                             giveMoneyToSeller(backend);
                             break;
                         }
@@ -652,12 +672,12 @@ void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comuni
     {
         for (int j = 0; j < backend->numUsers; j++)
         {
-            if ((strcmp(backend->utilizadores[j].nome, user.nome) == 0 ) && backend->utilizadores[j].saldo <= 0)
+            if ((strcmp(backend->utilizadores[j].nome, user.nome) == 0) && backend->utilizadores[j].saldo <= 0)
             {
                 comunica->retorno = 3;
                 break;
             }
-            else if((strcmp(backend->utilizadores[j].nome, user.nome) == 0 ) && backend->utilizadores[j].saldo > 0)
+            else if ((strcmp(backend->utilizadores[j].nome, user.nome) == 0) && backend->utilizadores[j].saldo > 0)
             {
                 if (backend->itens[i].idItem == id) // se ele existir
                 {
@@ -728,7 +748,17 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         }
         else if (strcmp(token, "list") == 0)
         {
-            printf("\nA ser implementado...\n");
+            for (int i = 0; i < backend->numItens; i++)
+            {
+                comunica.itens[i] = backend->itens[i];
+            }
+
+            if (write(utilizador_fd, &comunica.itens, sizeof(comunica.itens)) < 0)
+            {
+                perror("Erro no write do list\n");
+            }
+
+            close(utilizador_fd);
         }
         else if (strcmp(token, "licat") == 0)
         {
@@ -802,9 +832,9 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 comunica.retorno = 0;
                 cmdBuy(u, atoi(arg[1]), atoi(arg[2]), backend, &comunica);
-                
+
                 if (comunica.retorno == 1)
-                {   
+                {
                     giveMoneyToSellerCompreJa(backend);
                     strcpy(comunica.mensagem, "Item comprado com sucesso!");
                     write(utilizador_fd, &comunica, sizeof(comunica));
@@ -976,7 +1006,8 @@ int main(int argc, char **argv)
         printf("\n[ERRO] - Falha na criacao da thread TEMPO ITEM.\n");
     }
 
-    if (pthread_create(&promocoesThread, NULL, &promocoes, &backend) != 0){
+    if (pthread_create(&promocoesThread, NULL, &promocoes, &backend) != 0)
+    {
         printf("\n[ERRO] - Falha na criacao da thread PROMOTORES");
     }
 
