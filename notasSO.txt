@@ -17,7 +17,7 @@ Promoções
 
 Notas de Correção:
 Corrigir o recebimento do frontend para o comando list
-Corrigir user igual
+
 
 
 

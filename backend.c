@@ -247,6 +247,21 @@ void leFicheiroVendas(ptrbackend backend)
     fclose(f);
 }
 
+bool verificaPessoa(ptrbackend backend, USER u)
+{
+    for (int i = 0; i < backend->numUsers; i++)
+    {
+        if (strcmp(backend->utilizadores[i].nome, u.nome) == 0) // pid diferente do processo que está a tentar dar login
+        {
+            printf("\n[AVISO] - Utilizador [%s] ja estava logado\n", u.nome);
+            kill(u.pid, SIGQUIT); // temp
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
 {
     if (backend->numUsers == maxUsers)
@@ -255,18 +270,14 @@ void adicionaPessoa(ptrbackend backend, USER u, int maxUsers)
         return;
     }
 
-    for (int i = 0; i < maxUsers; i++)
-    {
-        if (strcmp(backend->utilizadores[i].nome, u.nome) == 0)
-        {
-            printf("\n[AVISO] - Utilizador [%s] ja estava logado\n", backend->utilizadores[i].nome);
-            kill(u.pid, SIGQUIT); // temp
-            // break;
-        }
+    if (verificaPessoa(backend, u))
+    { // se a pessoa for valida
+        printf("\nEntrei\n");
+        backend->utilizadores[backend->numUsers] = u;
+        backend->utilizadores[backend->numUsers].saldo = getUserBalance(backend->utilizadores[backend->numUsers].nome);
+        backend->numUsers++;
     }
-    backend->utilizadores[backend->numUsers] = u;
-    backend->utilizadores[backend->numUsers].saldo = getUserBalance(backend->utilizadores[backend->numUsers].nome);
-    backend->numUsers++;
+    
 }
 
 void resetDados(ptrbackend backend, ptruser user)
@@ -299,7 +310,6 @@ void removeItensFromArray(ptrbackend backend, ITEM item)
     {
         if (backend->itens[i].idItem != 0) // e ele existir
         {
-            printf("\n[AVISO] - Item %s removido do leilao!\n", backend->itens[i].nomeItem);
             resetDadosItens(backend, &backend->itens[i]);
             break;
         }
@@ -314,9 +324,7 @@ void removePessoaFromArray(ptrbackend backend, USER user)
         {
             if (backend->utilizadores[i].pid == user.pid) // e ele existir
             {
-                printf("\n[AVISO] - %s removido por inatividade, nao recebi o HEARTBEAT\n", backend->utilizadores[i].nome);
                 resetDados(backend, &backend->utilizadores[i]);
-                // backend->numUsers--;
                 break;
             }
         }
@@ -340,7 +348,9 @@ void *aumentaTempo(void *dados)
                 pdados->utilizadores[i].tempoLogged++;
                 if (pdados->utilizadores[i].tempoLogged >= HEARTBEAT + 1)
                 {
+                    printf("\n[AVISO] - %s removido por inatividade, nao recebi o HEARTBEAT\n", pdados->utilizadores[i].nome);
                     removePessoaFromArray(pdados, pdados->utilizadores[i]);
+                    break;
                 }
             }
         }
@@ -484,6 +494,7 @@ void cmdUsersBackend(BACKEND backend)
         {
             printf("\nNome: %s", backend.utilizadores[i].nome);
             printf("\nPass: %s", backend.utilizadores[i].pass);
+            printf("\nPID: %d", backend.utilizadores[i].pid);
             printf("\nSaldo: %d\n", backend.utilizadores[i].saldo);
         }
         else
@@ -750,9 +761,10 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             for (int i = 0; i < backend->numItens; i++)
             {
                 comunica.itens[i] = backend->itens[i];
+                comunica.numItens++;
             }
-
-            if (write(utilizador_fd, &comunica.itens, sizeof(comunica.itens)) < 0)
+            printf("\nTAM: %d", comunica.numItens);
+            if (write(utilizador_fd, &comunica, sizeof(comunica)) < 0)
             {
                 perror("Erro no write do list\n");
             }
@@ -950,6 +962,8 @@ int main(int argc, char **argv)
     backend.itens = malloc(maxItens * sizeof(*backend.itens));
     backend.promotores = malloc(maxPromotores * sizeof(*backend.promotores));
     comunica.itens = malloc(maxItens * sizeof(*comunica.itens));
+
+    comunica.numItens = 0;
 
     leFicheiroVendas(&backend);
 

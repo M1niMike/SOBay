@@ -104,8 +104,8 @@ int main(int argc, char **argv)
     USER user;
     ITEM item;
     COMUNICA comunica;
-    
-    
+
+    comunica.numItens = 0;
 
     int cont = 0;
 
@@ -116,8 +116,7 @@ int main(int argc, char **argv)
     signal(SIGTERM, sigTerm_handler);
     signal(SIGUSR1, sigUser1_handler);
 
-    comunica.itens = malloc(maxItens * sizeof(*comunica.itens));
-    
+    comunica.itens = malloc(maxItens * sizeof(*comunica.itens)); // aloca espaço para itens no frontend (será que é a melhor implementação?)
 
     user.pid = getpid();
 
@@ -306,23 +305,32 @@ int main(int argc, char **argv)
                         }
                         else if (strcmp(token, "list") == 0)
                         {
-
-                            // for (int i = 0; i < comunica.numItens; i++)
-                            // {
-                            // }
-
-                            if (read(utilizador_fd, &comunica.itens, sizeof(comunica.itens)) == -1)
+                            if (read(utilizador_fd, &comunica, sizeof(comunica)) < 0)
                             {
                                 perror("Erro no Read do List\n");
                                 unlink(SELLER_BUYER_FIFO_COM);
                                 exit(EXIT_FAILURE);
                             }
+
+                            printf("\nTAM: %d", comunica.numItens);
+                            for (int i = 0; i < comunica.numItens; i++)
+                            {
+                                
+                                printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
+                                printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                printf("\nMaior licitador: %s\n", comunica.itens[i].highestBidder);
+                            }
+
                             printf("AQUI\n");
-                        //     for (int i = 0; i < comunica.numItens; i++)
-                        //     {
-                        //         printf("aqui: %s", comunica.itens[i].nomeItem);
-                        //     }
-                            
+                            //     for (int i = 0; i < comunica.numItens; i++)
+                            //     {
+                            //         printf("aqui: %s", comunica.itens[i].nomeItem);
+                            //     }
                         }
                         else
                         {
