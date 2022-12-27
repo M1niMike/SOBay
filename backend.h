@@ -32,17 +32,17 @@ typedef struct item{
     char nomeItem[TAM];
     char categoria[TAM];
     int valorAtual; // pode tb ser valorInicial
-    float valorCompreJa;
+    int valorCompreJa;
     char sellerName[TAM];
     char highestBidder[TAM];
     int duracaoDesconto;
-    float savePrevValue;
+    int savePrevValue;
 }ITEM, *ptritem;
 
 typedef struct user{
     pid_t pid;
     char pass[TAM];
-    float saldo;
+    int saldo;
     char nome[TAM];
     int isLoggedIn;
     int tempoLogged;
@@ -54,6 +54,7 @@ typedef struct user{
 typedef struct promotores{
     char nome[TAM];
     int contaPromotores;
+    pid_t pid;
     char msg[TAM];
 }PROMOTORES, *ptrpromotores;
 
@@ -71,7 +72,7 @@ typedef struct comunica{
     int timeBackend;
     char mensagem[TAM];
     char comando[TAM];
-    float saldo;
+    int saldo;
     int retorno;
     int numItens;
     ptritem itens;
@@ -83,8 +84,8 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens);
 void leFicheiroVendas(ptrbackend backend);
 void adicionaPessoa(ptrbackend backend, USER u, int maxUsers);
 void resetDados(ptrbackend backend, ptruser user);
-void resetDadosItens(ptrbackend backend, ptritem item);
-void removeItensFromArray(ptrbackend backend, ITEM item);
+void resetDadosItens(ptritem item);
+void removeItensFromArray(ptrbackend backend, int id);
 void removePessoaFromArray(ptrbackend backend, USER user);
 void *aumentaTempo(void *dados);
 void *aumentaTempoItem(void *dados);
@@ -96,9 +97,10 @@ void interface(BACKEND backend, USER user, ITEM item);
 void cmdSell(char *nomeItem, char *categoria, int precoBase, int compreJa, int duracao, ptrbackend backend, USER user, int maxItens);
 void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comunica);
 void cmdAdd(COMUNICA comunica, USER user, ptrbackend backend, int saldoToAdd);
-void giveMoneyToSeller(ptrbackend backend);
-void giveMoneyToSellerCompreJa(ptrbackend backend);
+void giveMoneyToSeller(ptrbackend backend, int id);
+void giveMoneyToSellerCompreJa(ptrbackend backend, int id);
 void *promocoes(void *dados);
+void cmdCancelProm(ptrbackend backend, char *nomeProm);
 
 
 #endif //SO_BACKEND_H

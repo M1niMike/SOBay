@@ -1,2 +1,6 @@
 promotores/black_friday
 promotores/promotor_oficial
+promotores/desconto_now
+promotores/descontao
+promotores/pobretao
+promotores/save_save

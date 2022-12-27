@@ -14,10 +14,9 @@ Tramento das Notificações (fazer a thread)
 
 
 Notas de Correção:
-Corrigir ids a repetir
 Promoções (corrigir a cena de decrementar o tempo e voltar ao valor original quando acaba)
-Corrigir também o valor da promoção, quando o compreJá é 0 (quando não há um vCOmprejá, não há promoção a ser aplicada.)
-Dizer ao user que, se ele meter um valor demasiado baixo no lival então printa que esse valor é demasiado baixo e que não há itens com esse valor 
+Promotores (Impedir de executar varios com o mesmo nome)
+Dizer ao user que, se ele meter um valor demasiado baixo no lival e litime então printa que esse valor é demasiado baixo e que não há itens com esse valor 
 
 
 
@@ -27,6 +26,7 @@ Correção [MEGA STRETCH GOAL]
 corrigir verificao dos int e string no comando sell
 Corrigir o numUsers -> espaco de memoria
 Corrigir o numItens -> espaco de memoria
+Corrigir apenas faz venda se o seller estiver online
 
 
 

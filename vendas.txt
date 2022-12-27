@@ -1,6 +1,4 @@
-1 pc informatica 20 25.00 292 joao -
-2 pc informatica 40 10.00 292 joao -
-3 pc telemoveis 50 4.69 292 mike -
-4 pc telemoveis 10 15.62 292 ricardo -
-5 pc consumiveis 200 1000.00 292 ricardo -
-6 pc consumiveis 40 200.00 292 ricardo -
+1 pc informatica 10 0 540 joao -
+2 pc telemoveis 20 0 540 joao -
+3 pc informatica 30 0 540 joao mike
+4 dd dd 40 100 700 mike -

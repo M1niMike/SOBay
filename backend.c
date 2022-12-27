@@ -59,8 +59,6 @@ char *execPromotor(char *name)
     // envolver o fork() num for com a quantidade de promoters que existem
     // executar no execl(promotor[i], promotor[i], NULL)
 
-    // strcat(nomePromotores[i].nome, "/promotores/"); //arg1 + arg2
-
     id = fork();
 
     if (id == -1)
@@ -75,10 +73,10 @@ char *execPromotor(char *name)
         close(fd[1]);
         printf("\n%s", mensagem);
 
-        // Encerra o promotor
-        union sigval val;
-        sigqueue(id, SIGUSR1, val);
-        wait(&id);
+        // // Encerra o promotor
+        // union sigval val;
+        // sigqueue(id, SIGUSR1, val);
+        // wait(&id);
     }
 
     else if (id == 0)
@@ -96,6 +94,43 @@ char *execPromotor(char *name)
     return mensagem;
 }
 
+void cmdProm(ptrbackend backend)
+{
+    for (int i = 0; i < backend->numPromoters; i++)
+    {
+        if (backend->promotores[i].pid != 0)
+        {
+            printf("\nNome do promotor %d: %s\n", i + 1, backend->promotores[i].nome);
+            printf("\nPID do promotor %d: %d\n", i + 1, backend->promotores[i].pid);
+        }
+        else
+        {
+            break;
+        }
+    }
+}
+
+void cmdCancelProm(ptrbackend backend, char *nomeProm)
+{
+    for (int i = 0; i < backend->numPromoters; i++)
+    {
+        if (strcmp(backend->promotores[i].nome, nomeProm) == 0)
+        {
+            printf("Encerrei o %s\n", backend->promotores[i].nome);
+            printf("\nPID de promotor %s: %d", backend->promotores[i].nome, backend->promotores[i].pid);
+            printf("\nNumero de promotores after cancel: %d", backend->numPromoters);
+            kill(backend->promotores[i].pid, SIGUSR1);
+            wait(&backend->promotores[i].pid);
+            break;
+        }
+        else
+        {
+            printf("Nome errado\n");
+            break;
+        }
+    }
+}
+
 void *promocoes(void *dados)
 { // thread para estar continuamente a executar promotor para os users verem promocoes
     ptrbackend backend = (ptrbackend)dados;
@@ -108,10 +143,17 @@ void *promocoes(void *dados)
     {
         for (int i = 0; i < backend->numPromoters; i++)
         {
+            // cont = 1 cont = 2 cont = 3 até chegar a 6
 
             strcpy(backend->promotores[i].msg, execPromotor(backend->promotores[i].nome));
+
             backend->promotores[i].msg[strcspn(backend->promotores[i].msg, "\n")] = 0;
+
             token = strtok(backend->promotores[i].msg, " \n"); // categoria
+
+            // printf("\nPID %d\n", id);
+
+            backend->promotores[i].pid = id;
 
             if (token != NULL)
             {
@@ -150,7 +192,7 @@ void *promocoes(void *dados)
                 token = strtok(NULL, " ");
             }
 
-            sleep(30);
+            sleep(2);
             continue;
         }
     }
@@ -202,12 +244,22 @@ void clear()
 
 void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
 {
+    for (int i = 0; i < backend->numPromoters; i++)
+    {
+        if (backend->promotores[i].pid != 0)
+        {
+            printf("\nA encerrar... [%s]\n", backend->promotores[i].nome);
+            kill(backend->promotores[i].pid, SIGUSR1);
+            wait(&backend->promotores[i].pid);
+        }
+    }
+
     for (int i = 0; i < numUsers; i++)
     {
         if (backend->utilizadores[i].pid != 0)
         {
             // printf("Encerrando Users(%d)...\n" );
-            printf("[%s]", backend->utilizadores[i].nome);
+            printf("\nA encerrar... [%s]\n", backend->utilizadores[i].nome);
             kill(backend->utilizadores[i].pid, SIGTERM);
         }
     }
@@ -229,7 +281,7 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
             {
                 strcpy(backend->itens[i].highestBidder, "-");
 
-                fprintf(f, "%d %s %s %d %0.2f %d %s %s\n",
+                fprintf(f, "%d %s %s %d %d %d %s %s\n",
                         backend->itens[i].idItem,
                         backend->itens[i].nomeItem,
                         backend->itens[i].categoria,
@@ -241,7 +293,7 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
             }
             else
             {
-                fprintf(f, "%d %s %s %d %0.2f %d %s %s\n",
+                fprintf(f, "%d %s %s %d %d %d %s %s\n",
                         backend->itens[i].idItem,
                         backend->itens[i].nomeItem,
                         backend->itens[i].categoria,
@@ -257,8 +309,22 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
     fclose(f);
     unlink(BACKEND_FIFO);
     unlink(SINAL_FIFO);
-    kill(getpid(), SIGTERM);
+    exit(EXIT_SUCCESS);
     // encerrar os promotores tambem
+}
+
+void cmdReprom(ptrbackend backend)
+{
+    readPromotersFile(backend);
+
+    for (int i = 0; i < backend->numPromoters; i++)
+    {
+        if (backend->promotores[i].pid != 0)
+        {
+        }
+        else
+            break;
+    }
 }
 
 void leFicheiroVendas(ptrbackend backend)
@@ -271,7 +337,7 @@ void leFicheiroVendas(ptrbackend backend)
         return;
     }
 
-    while (fscanf(f, "%d %s %s %d %f %d %s %s",
+    while (fscanf(f, "%d %s %s %d %d %d %s %s",
                   &(backend->itens[backend->numItens].idItem),
                   backend->itens[backend->numItens].nomeItem,
                   backend->itens[backend->numItens].categoria,
@@ -281,11 +347,9 @@ void leFicheiroVendas(ptrbackend backend)
                   backend->itens[backend->numItens].sellerName,
                   backend->itens[backend->numItens].highestBidder) != EOF)
     {
+        backend->itens[backend->numItens].idItem = backend->numItens + 1;
         backend->numItens++;
-        // if
-        // printf("\n%d\n", backend->numItens);
     }
-
     fclose(f);
 }
 
@@ -332,7 +396,7 @@ void resetDados(ptrbackend backend, ptruser user)
     user->tempoLogged = 0;
 }
 
-void resetDadosItens(ptrbackend backend, ptritem item)
+void resetDadosItens(ptritem item)
 {
     item->idItem = 0;
     strcpy(item->nomeItem, "\0");
@@ -341,17 +405,17 @@ void resetDadosItens(ptrbackend backend, ptritem item)
     item->valorCompreJa = 0;
     item->duracao = 0;
     strcpy(item->sellerName, "\0");
-    // backend->numItens--;
+    strcpy(item->highestBidder, "\0");
 }
 
-void removeItensFromArray(ptrbackend backend, ITEM item)
+void removeItensFromArray(ptrbackend backend, int id)
 {
 
     for (int i = 0; i < backend->numItens; i++)
     {
-        if (backend->itens[i].idItem != 0) // e ele existir
+        if (backend->itens[i].idItem == id) // e ele existir
         {
-            resetDadosItens(backend, &backend->itens[i]);
+            resetDadosItens(&backend->itens[i]);
             break;
         }
     }
@@ -411,25 +475,26 @@ void *aumentaTempoItem(void *dados)
             if (backend->itens[i].idItem != 0 && backend->itens[i].duracao > 0)
             {
                 backend->itens[i].duracao--;
-                if (backend->itens[i].duracao == 0)
+                if (backend->itens[i].duracao == 0) // se o tempo do item chegar a 0
                 {
-                    if ((strcmp(backend->itens[i].highestBidder, "\0") == 0) || strcmp(backend->itens[i].highestBidder, "-") == 0)
+                    if ((strcmp(backend->itens[i].highestBidder, "\0") == 0) || strcmp(backend->itens[i].highestBidder, "-") == 0) // sem um licitador
                     {
-                        removeItensFromArray(backend, backend->itens[i]);
+                        removeItensFromArray(backend, backend->itens[i].idItem); // remove o item
                         printf("\nNinguem licitou neste item.\n");
+
                         break;
                     }
                     printf("\n%s foi o maior licitador do item %s!\n", backend->itens[i].highestBidder, backend->itens[i].nomeItem);
 
-                    for (int j = 0; j < backend->numUsers; j++)
+                    for (int j = 0; j < backend->numUsers; j++) //
                     {
                         if (strcmp(backend->utilizadores[j].nome, backend->itens[i].highestBidder) == 0)
                         {
                             backend->utilizadores[j].saldo -= backend->itens[i].valorAtual;
                             updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
                             saveUsersFile(FUSERS);
-                            giveMoneyToSeller(backend);
-                            break;
+                            giveMoneyToSeller(backend, backend->itens[i].idItem);
+                            // break;
                         }
                     }
                 }
@@ -438,6 +503,24 @@ void *aumentaTempoItem(void *dados)
             {
                 continue;
             }
+        }
+    }
+}
+
+void *notificacaoVenda(void *dados)
+{
+    ptrbackend backend = (ptrbackend)dados;
+
+    for (int i = 0; i < backend->numItens; i++)
+    {
+        if (backend->itens[i].idItem == 0 && strcmp(backend->itens[i].sellerName, " ") != 0)
+        { // se ele foi vendido a alguem
+            printf("\nItem vendido a %s!\n", backend->itens[i].highestBidder);
+        }
+
+        else if (backend->itens[i].duracao == 0 && backend->itens[i].idItem != 0)
+        { // o item nao foi vendido
+            printf("\nO tempo no item %s expirou! Nao podera compra-lo mais!\n", backend->itens[i].nomeItem);
         }
     }
 }
@@ -478,7 +561,7 @@ void cmdListBackend(ptrbackend backend)
             printf("\nNome do vendedor: %s", backend->itens[i].sellerName);
             printf("\nCategoria item: %s", backend->itens[i].categoria);
             printf("\nPreco item: %d", backend->itens[i].valorAtual);
-            printf("\nPreco compre ja: %0.2f", backend->itens[i].valorCompreJa);
+            printf("\nPreco compre ja: %d", backend->itens[i].valorCompreJa);
             printf("\nDuracao: %d", backend->itens[i].duracao);
             printf("\nMaior licitador: %s\n", backend->itens[i].highestBidder);
         }
@@ -506,7 +589,7 @@ void cmdKickBackend(ptrbackend backend, char *nome)
             if (backend->utilizadores[i].pid != 0) // e ele existir
             {
 
-                kill(backend->utilizadores[i].pid, SIGUSR1);
+                kill(backend->utilizadores[i].pid, SIGUSR2);
                 resetDados(backend, &backend->utilizadores[i]);
                 // backend->numUsers--;
                 printf("[AVISO] - %s foi removido", nome);
@@ -536,7 +619,7 @@ void cmdUsersBackend(BACKEND backend)
             printf("\nNome: %s", backend.utilizadores[i].nome);
             printf("\nPass: %s", backend.utilizadores[i].pass);
             printf("\nPID: %d", backend.utilizadores[i].pid);
-            printf("\nSaldo: %0.2f\n", backend.utilizadores[i].saldo);
+            printf("\nSaldo: %d\n", backend.utilizadores[i].saldo);
         }
         else
         {
@@ -589,7 +672,7 @@ void interface(BACKEND backend, USER user, ITEM item)
         }
         else if (strcmp(token, "prom") == 0)
         {
-            printf("\nA ser implementado...\n");
+            cmdProm(&backend);
         }
         else if (strcmp(token, "reprom") == 0)
         {
@@ -598,11 +681,10 @@ void interface(BACKEND backend, USER user, ITEM item)
         else if (strcmp(token, "cancel") == 0)
         {
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2] != NULL)
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                cmdCancelProm(&backend, arg[1]);
             }
             else
             {
@@ -675,36 +757,45 @@ void cmdAdd(COMUNICA comunica, USER user, ptrbackend backend, int saldoToAdd)
     }
 }
 
-void giveMoneyToSeller(ptrbackend backend)
+void giveMoneyToSeller(ptrbackend backend, int id)
 {
     for (int j = 0; j < backend->numUsers; j++)
     {
         for (int i = 0; i < backend->numItens; i++)
         {
-            if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+            if (backend->itens[i].idItem == id)
             {
-                backend->utilizadores[j].saldo += backend->itens[i].valorAtual;
-                updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
-                saveUsersFile(FUSERS);
-                removeItensFromArray(backend, backend->itens[i]);
-                break;
+                if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+                {
+                    backend->utilizadores[j].saldo += backend->itens[i].valorAtual;
+                    updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                    saveUsersFile(FUSERS);
+                    removeItensFromArray(backend, id);
+                    // break;
+                }
             }
         }
     }
 }
-void giveMoneyToSellerCompreJa(ptrbackend backend)
+
+void giveMoneyToSellerCompreJa(ptrbackend backend, int id)
 {
     for (int j = 0; j < backend->numUsers; j++)
     {
         for (int i = 0; i < backend->numItens; i++)
         {
-            if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+            printf("ITEM: %d\n", id);
+            if (backend->itens[i].idItem == id)
             {
-                backend->utilizadores[j].saldo += backend->itens[i].valorCompreJa;
-                updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
-                saveUsersFile(FUSERS);
-                removeItensFromArray(backend, backend->itens[i]);
-                break;
+                if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+                {
+                    backend->utilizadores[j].saldo += backend->itens[i].valorCompreJa;
+                    updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                    saveUsersFile(FUSERS);
+                    removeItensFromArray(backend, id);
+                }
+
+                // break;
             }
         }
     }
@@ -750,7 +841,17 @@ void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comuni
                             saveUsersFile(FUSERS);
                             printf("%s foi comprado com o compreja por %s\n", backend->itens[i].nomeItem, backend->utilizadores[j].nome);
                             comunica->retorno = 1;
-                            break;
+                            giveMoneyToSellerCompreJa(backend, id);
+                            // if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
+                            // {
+                            //     backend->utilizadores[j].saldo += backend->itens[i].valorCompreJa;
+                            //     updateUserBalance(backend->utilizadores[j].nome, backend->utilizadores[j].saldo);
+                            //     saveUsersFile(FUSERS);
+                            //     comunica->retorno = 1;
+                            //     removeItensFromArray(backend);
+
+                            //     //break;
+                            // }
                         }
                     }
 
@@ -859,6 +960,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 
             if (arg[1] != NULL)
             {
+                
                 for (int i = 0; i < backend->numItens; i++)
                 {
                     comunica.itens[i] = backend->itens[i];
@@ -911,11 +1013,11 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             if (arg[1] != NULL && arg[2] != NULL)
             {
                 comunica.retorno = 0;
-                cmdBuy(u, atoi(arg[1]), atoi(arg[2]), backend, &comunica);
+                cmdBuy(u, atoi(arg[1]), atof(arg[2]), backend, &comunica);
 
                 if (comunica.retorno == 1)
                 {
-                    giveMoneyToSellerCompreJa(backend);
+                    // giveMoneyToSellerCompreJa(backend);
                     strcpy(comunica.mensagem, "Item comprado com sucesso!");
                     write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
@@ -1090,8 +1192,12 @@ int main(int argc, char **argv)
 
     if (pthread_create(&promocoesThread, NULL, &promocoes, &backend) != 0)
     {
-        printf("\n[ERRO] - Falha na criacao da thread PROMOTORES");
+        printf("\n[ERRO] - Falha na criacao da thread PROMOTORES\n");
     }
+
+    // if (pthread_create(&notificacaoCompraThread, NULL, &notificacaoVenda, &backend)){
+    //     printf("\n[ERRO] - Falha na criacao da thread NOTIFICACOES\n");
+    // }
 
     while (1)
     {
