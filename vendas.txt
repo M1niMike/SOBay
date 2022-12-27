@@ -1,1 +1,6 @@
-1 casa moradia 2 2 420 mike -
+1 pc informatica 20 100.00 322 mike -
+2 pc informatica 20 100.00 322 mike -
+3 pc telemoveis 20 50.00 322 mike -
+4 pc telemoveis 20 50.00 322 mike -
+5 pc consumiveis 20 100.00 322 mike -
+6 pc consumiveis 20 100.00 322 mike -

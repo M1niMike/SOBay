@@ -89,8 +89,8 @@ void clear()
 
 int main(int argc, char **argv)
 {
-    char password[50];
-    char username[50];
+    char password[TAM];
+    char username[TAM];
     fd_set read_fds;
     int nfd;           // para o return do select
     struct timeval tv; // timeout do selects
@@ -251,7 +251,7 @@ int main(int argc, char **argv)
                         {
                             read(utilizador_fd, &comunica, sizeof(comunica));
                             user.saldo = comunica.saldo;
-                            printf("\nSeu saldo atual: (%d)\n", comunica.saldo);
+                            printf("\nSeu saldo atual: (%0.2f)\n", comunica.saldo);
                         }
                         else if (strcmp(token, "add") == 0)
                         {
@@ -305,32 +305,26 @@ int main(int argc, char **argv)
                         }
                         else if (strcmp(token, "list") == 0)
                         {
-                            if (read(utilizador_fd, &comunica, sizeof(comunica)) < 0)
-                            {
-                                perror("Erro no Read do List\n");
-                                unlink(SELLER_BUYER_FIFO_COM);
-                                exit(EXIT_FAILURE);
-                            }
 
-                            printf("\nTAM: %d", comunica.numItens);
-                            for (int i = 0; i < comunica.numItens; i++)
+                            for (int i = 0; i < maxItens; i++)
                             {
-                                
-                                printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                printf("\nMaior licitador: %s\n", comunica.itens[i].highestBidder);
+                                read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                                if (comunica.itens[i].idItem != 0)
+                                {
+                                    printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                    printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                    printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                    printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                    printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                    printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
+                                    printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                    printf("\nMaior licitador: %s\n", comunica.itens[i].highestBidder);
+                                }
+                                else
+                                {
+                                    break;
+                                }
                             }
-
-                            printf("AQUI\n");
-                            //     for (int i = 0; i < comunica.numItens; i++)
-                            //     {
-                            //         printf("aqui: %s", comunica.itens[i].nomeItem);
-                            //     }
                         }
                         else
                         {

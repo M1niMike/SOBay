@@ -32,15 +32,17 @@ typedef struct item{
     char nomeItem[TAM];
     char categoria[TAM];
     int valorAtual; // pode tb ser valorInicial
-    int valorCompreJa;
+    float valorCompreJa;
     char sellerName[TAM];
     char highestBidder[TAM];
+    int duracaoDesconto;
+    float savePrevValue;
 }ITEM, *ptritem;
 
 typedef struct user{
     pid_t pid;
     char pass[TAM];
-    int saldo;
+    float saldo;
     char nome[TAM];
     int isLoggedIn;
     int tempoLogged;
@@ -69,7 +71,7 @@ typedef struct comunica{
     int timeBackend;
     char mensagem[TAM];
     char comando[TAM];
-    int saldo;
+    float saldo;
     int retorno;
     int numItens;
     ptritem itens;
