@@ -103,6 +103,7 @@ void *promocoes(void *dados)
     char *arg[2];
 
     printf("\nNum de promoters: %d\n", backend->numPromoters);
+
     while (1)
     {
         for (int i = 0; i < backend->numPromoters; i++)
@@ -121,30 +122,28 @@ void *promocoes(void *dados)
 
                 char *duracao = arg[2];
 
-                // printf("D: %d", desconto);
-
                 for (int j = 0; j < backend->numItens; j++)
                 {
 
                     if (strcmp(token, backend->itens[j].categoria) == 0)
                     { // ver melhor mas o atoi(arg2) significa que o tempo não chegou a 0
-                        backend->itens[j].savePrevValue = backend->itens[j].valorCompreJa;
-                        backend->itens[j].duracaoDesconto = atoi(duracao);
+                        // backend->itens[j].savePrevValue = backend->itens[j].valorCompreJa;
+                        // backend->itens[j].duracaoDesconto = atoi(duracao);
 
                         backend->itens[j].valorCompreJa = (desconto * backend->itens[j].valorCompreJa) / 100;
 
-                        if (backend->itens[j].duracaoDesconto > 0)
-                        {
-                            sleep(1);
+                        // if (backend->itens[j].duracaoDesconto > 0)
+                        // {
+                        //     sleep(1);
 
-                            backend->itens[j].duracaoDesconto--;
-                            printf("\n%d\n", backend->itens[j].duracaoDesconto);
-                        }
-                        else
-                        {
-                            backend->itens[j].valorCompreJa = backend->itens[j].savePrevValue;
-                            break;
-                        }
+                        //     backend->itens[j].duracaoDesconto--;
+                        //     printf("\n%d\n", backend->itens[j].duracaoDesconto);
+                        // }
+                        // else
+                        // {
+                        //     backend->itens[j].valorCompreJa = backend->itens[j].savePrevValue;
+                        //     break;
+                        // }
                     }
                 }
 
@@ -787,14 +786,14 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 cmdSell(arg[1], arg[2], atoi(arg[3]), atoi(arg[4]), atoi(arg[5]), backend, u, 30);
                 strcpy(comunica.mensagem, "Item colocado a venda!");
-                write(utilizador_fd, &comunica, sizeof(comunica));
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
                 strcpy(comunica.mensagem, "Insira [sell] [nomeItem] [categoria] [precoAtual] [precoCompreJa | 0 se nao tiver] [duracao]]!");
-                write(utilizador_fd, &comunica, sizeof(comunica));
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
         }
@@ -812,64 +811,96 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         else if (strcmp(token, "licat") == 0)
         {
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2] != NULL)
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                for (int i = 0; i < backend->numItens; i++)
+                {
+                    comunica.itens[i] = backend->itens[i];
+                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                }
+
+                close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+                strcpy(comunica.mensagem, "Insira [licat] [categoria]");
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                close(utilizador_fd);
             }
         }
         else if (strcmp(token, "lisel") == 0)
         {
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2] != NULL)
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                for (int i = 0; i < backend->numItens; i++)
+                {
+                    comunica.itens[i] = backend->itens[i];
+                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                }
+
+                close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+                strcpy(comunica.mensagem, "Insira [lisel] [nomeVendedor]");
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                close(utilizador_fd);
             }
         }
         else if (strcmp(token, "lival") == 0)
         {
 
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2] != NULL)
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                for (int i = 0; i < backend->numItens; i++)
+                {
+                    comunica.itens[i] = backend->itens[i];
+                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                }
+
+                close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+                strcpy(comunica.mensagem, "Insira [lival] [valor]");
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                close(utilizador_fd);
             }
         }
         else if (strcmp(token, "litime") == 0)
         {
             arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
 
-            if (arg[1] != NULL && arg[2] != NULL)
+            if (arg[1] != NULL)
             {
-                printf("\nA ser implementado...\n");
+                for (int i = 0; i < backend->numItens; i++)
+                {
+                    comunica.itens[i] = backend->itens[i];
+                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                }
+
+                close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
+                strcpy(comunica.mensagem, "Insira [litime] [tempo]");
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                close(utilizador_fd);
             }
         }
         else if (strcmp(token, "time") == 0)
         {
             comunica.timeBackend = backend->time;
-            write(utilizador_fd, &comunica, sizeof(comunica));
+            write(utilizador_fd, &comunica.timeBackend, sizeof(comunica.timeBackend));
             close(utilizador_fd);
         }
         else if (strcmp(token, "buy") == 0)
@@ -886,31 +917,31 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 {
                     giveMoneyToSellerCompreJa(backend);
                     strcpy(comunica.mensagem, "Item comprado com sucesso!");
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
                 else if (comunica.retorno == 0)
                 {
                     strcpy(comunica.mensagem, "Dinheiro insuficiente | Item ja vendido!");
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
                 else if (comunica.retorno == -1)
                 {
                     strcpy(comunica.mensagem, "ID nao existe!");
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
                 else if (comunica.retorno == 2)
                 {
                     strcpy(comunica.mensagem, "Licitacao feita!");
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
                 else if (comunica.retorno == 3)
                 {
                     strcpy(comunica.mensagem, "Saldo negativo - use o comando add!");
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
             }
@@ -918,7 +949,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
                 strcpy(comunica.mensagem, "Insira [buy] [id] [valor]");
-                write(utilizador_fd, &comunica, sizeof(comunica));
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
         }
@@ -930,7 +961,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 if (strcmp(u.nome, backend->utilizadores[i].nome) == 0)
                 {
                     comunica.saldo = backend->utilizadores[i].saldo;
-                    write(utilizador_fd, &comunica, sizeof(comunica));
+                    write(utilizador_fd, &comunica.saldo, sizeof(comunica.saldo));
                     close(utilizador_fd);
                 }
 
@@ -946,14 +977,14 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 cmdAdd(comunica, u, backend, atoi(arg[1]));
                 strcpy(comunica.mensagem, "Saldo atualizado com sucesso");
-                write(utilizador_fd, &comunica, sizeof(comunica));
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
                 strcpy(comunica.mensagem, "Insira [add] [valor]");
-                write(utilizador_fd, &comunica, sizeof(comunica));
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
         }

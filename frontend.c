@@ -31,6 +31,7 @@ void *mandaSinal(void *dados)
     int pid = pdados->pid;
 
     int heartBeatTime = atoi(getenv("HEARTBEAT"));
+
     while (1)
     {
         sleep(heartBeatTime);
@@ -244,14 +245,14 @@ int main(int argc, char **argv)
 
                         if (strcmp(token, "time") == 0)
                         {
-                            read(utilizador_fd, &comunica, sizeof(comunica));
+                            read(utilizador_fd, &comunica.timeBackend, sizeof(comunica.timeBackend));
                             printf("\nTempo da plataforma atual: (%d) segundos\n", comunica.timeBackend);
                         }
                         else if (strcmp(token, "cash") == 0)
                         {
-                            read(utilizador_fd, &comunica, sizeof(comunica));
+                            read(utilizador_fd, &comunica.saldo, sizeof(comunica.saldo));
                             user.saldo = comunica.saldo;
-                            printf("\nSeu saldo atual: (%0.2f)\n", comunica.saldo);
+                            printf("\nSeu saldo atual: (%0.2f)\n", user.saldo);
                         }
                         else if (strcmp(token, "add") == 0)
                         {
@@ -259,12 +260,12 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL)
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                         }
@@ -275,12 +276,12 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL && arg[2] != NULL)
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                         }
@@ -294,12 +295,12 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
-                                read(utilizador_fd, &comunica, sizeof(comunica));
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                                 printf("\n%s\n", comunica.mensagem);
                             }
                         }
@@ -311,6 +312,7 @@ int main(int argc, char **argv)
                                 read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
                                 if (comunica.itens[i].idItem != 0)
                                 {
+                                    printf("\n--------------------------------------\n");
                                     printf("\nItem Id: %d", comunica.itens[i].idItem);
                                     printf("\nNome item: %s", comunica.itens[i].nomeItem);
                                     printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
@@ -319,11 +321,136 @@ int main(int argc, char **argv)
                                     printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
                                     printf("\nDuracao: %d", comunica.itens[i].duracao);
                                     printf("\nMaior licitador: %s\n", comunica.itens[i].highestBidder);
+                                    printf("\n--------------------------------------\n");
                                 }
                                 else
                                 {
                                     break;
                                 }
+                            }
+                        }
+                        else if (strcmp(token, "lisel") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                for (int i = 0; i < maxItens; i++)
+                                {
+                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+
+                                    if (comunica.itens[i].idItem != 0 && strcmp(comunica.itens[i].sellerName, arg[1]) == 0)
+                                    {
+                                        printf("\n--------------------------------------\n");
+                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                        printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
+                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
+                                        printf("\n--------------------------------------\n");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                        }
+                        else if (strcmp(token, "licat") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                for (int i = 0; i < maxItens; i++)
+                                {
+                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+
+                                    if (comunica.itens[i].idItem != 0 && strcmp(comunica.itens[i].categoria, arg[1]) == 0)
+                                    {
+                                        printf("\n--------------------------------------\n");
+                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                        printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
+                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
+                                        printf("\n--------------------------------------\n");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                        }
+                        else if (strcmp(token, "lival") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                for (int i = 0; i < maxItens; i++)
+                                {
+                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+
+                                    if (comunica.itens[i].idItem != 0 && comunica.itens[i].valorAtual <= atoi(arg[1]))
+                                    {
+                                        printf("\n--------------------------------------");
+                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                        printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
+                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
+                                        printf("\n--------------------------------------\n");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
+                            }
+                        }
+                        else if (strcmp(token, "litime") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                for (int i = 0; i < maxItens; i++)
+                                {
+                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+
+                                    if (comunica.itens[i].idItem != 0 && comunica.itens[i].duracao <= atoi(arg[1]))
+                                    {
+                                        printf("\n--------------------------------------");
+                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
+                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
+                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
+                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
+                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
+                                        printf("\nPreco compre ja: %0.2f", comunica.itens[i].valorCompreJa);
+                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
+                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
+                                        printf("\n--------------------------------------\n");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
                             }
                         }
                         else
