@@ -143,15 +143,11 @@ void *promocoes(void *dados)
     {
         for (int i = 0; i < backend->numPromoters; i++)
         {
-            // cont = 1 cont = 2 cont = 3 até chegar a 6
-
             strcpy(backend->promotores[i].msg, execPromotor(backend->promotores[i].nome));
 
             backend->promotores[i].msg[strcspn(backend->promotores[i].msg, "\n")] = 0;
 
             token = strtok(backend->promotores[i].msg, " \n"); // categoria
-
-            // printf("\nPID %d\n", id);
 
             backend->promotores[i].pid = id;
 
@@ -166,14 +162,11 @@ void *promocoes(void *dados)
 
                 for (int j = 0; j < backend->numItens; j++)
                 {
-
                     if (strcmp(token, backend->itens[j].categoria) == 0)
                     { // ver melhor mas o atoi(arg2) significa que o tempo não chegou a 0
                         // backend->itens[j].savePrevValue = backend->itens[j].valorCompreJa;
                         // backend->itens[j].duracaoDesconto = atoi(duracao);
-
                         backend->itens[j].valorCompreJa = (desconto * backend->itens[j].valorCompreJa) / 100;
-
                         // if (backend->itens[j].duracaoDesconto > 0)
                         // {
                         //     sleep(1);
@@ -188,7 +181,6 @@ void *promocoes(void *dados)
                         // }
                     }
                 }
-
                 token = strtok(NULL, " ");
             }
 
@@ -315,16 +307,24 @@ void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens)
 
 void cmdReprom(ptrbackend backend)
 {
-    readPromotersFile(backend);
+    FILE *f = fopen(FPROMOTERS, "rt");
+
+    if (f == NULL)
+    {
+        printf("\nErro na abertura do ficheiro de texto PROMOTORES!\n");
+        fclose(f);
+        return;
+    }
 
     for (int i = 0; i < backend->numPromoters; i++)
     {
-        if (backend->promotores[i].pid != 0)
+        while (fscanf(f, "%s", backend->promotores[backend->numPromoters].nome) != EOF)
         {
+            backend->numPromoters++;
         }
-        else
-            break;
     }
+
+    fclose(f);
 }
 
 void leFicheiroVendas(ptrbackend backend)
@@ -870,6 +870,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 {
     char *token;
     char *arg[5];
+    char aux[TAM];
 
     token = strtok(u.comando, " \n");
 
@@ -903,30 +904,60 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 
             for (int i = 0; i < backend->numItens; i++)
             {
-                comunica.itens[i] = backend->itens[i];
-                write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                        backend->itens[i].idItem,
+                        backend->itens[i].nomeItem,
+                        backend->itens[i].categoria,
+                        backend->itens[i].valorAtual,
+                        backend->itens[i].valorCompreJa,
+                        backend->itens[i].duracao,
+                        backend->itens[i].sellerName,
+                        backend->itens[i].highestBidder);
+                strcat(comunica.mensagem, aux);
             }
+            write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
 
             close(utilizador_fd);
         }
         else if (strcmp(token, "licat") == 0)
         {
-            arg[1] = strtok(NULL, " \n");
+             arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
+
+                bool flag = false;
+
                 for (int i = 0; i < backend->numItens; i++)
                 {
-                    comunica.itens[i] = backend->itens[i];
-                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                    if (strcmp(backend->itens[i].categoria, arg[1]) == 0)
+                    {
+                        sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                                backend->itens[i].idItem,
+                                backend->itens[i].nomeItem,
+                                backend->itens[i].categoria,
+                                backend->itens[i].valorAtual,
+                                backend->itens[i].valorCompreJa,
+                                backend->itens[i].duracao,
+                                backend->itens[i].sellerName,
+                                backend->itens[i].highestBidder);
+                        strcat(comunica.mensagem, aux);
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                {
+                    sprintf(comunica.mensagem, "%s Insira uma categoria valida\n", u.nome);
                 }
 
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                strcpy(comunica.mensagem, "");
                 close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
-                strcpy(comunica.mensagem, "Insira [licat] [categoria]");
+                strcpy(comunica.mensagem, "Insira [lisel] [nomeVendedor]");
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
@@ -937,12 +968,33 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 
             if (arg[1] != NULL)
             {
+
+                bool flag = false;
+
                 for (int i = 0; i < backend->numItens; i++)
                 {
-                    comunica.itens[i] = backend->itens[i];
-                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                    if (strcmp(backend->itens[i].sellerName, arg[1]) == 0)
+                    {
+                        sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                                backend->itens[i].idItem,
+                                backend->itens[i].nomeItem,
+                                backend->itens[i].categoria,
+                                backend->itens[i].valorAtual,
+                                backend->itens[i].valorCompreJa,
+                                backend->itens[i].duracao,
+                                backend->itens[i].sellerName,
+                                backend->itens[i].highestBidder);
+                        strcat(comunica.mensagem, aux);
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                {
+                    sprintf(comunica.mensagem, "%s Insira um vendedor valido\n", u.nome);
                 }
 
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                strcpy(comunica.mensagem, "");
                 close(utilizador_fd);
             }
             else
@@ -956,53 +1008,96 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         else if (strcmp(token, "lival") == 0)
         {
 
-            arg[1] = strtok(NULL, " \n");
+             arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
-                
+
+                bool flag = false;
+
                 for (int i = 0; i < backend->numItens; i++)
                 {
-                    comunica.itens[i] = backend->itens[i];
-                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                    if (atoi(arg[1]) >= backend->itens[i].valorAtual)
+                    {
+                        sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                                backend->itens[i].idItem,
+                                backend->itens[i].nomeItem,
+                                backend->itens[i].categoria,
+                                backend->itens[i].valorAtual,
+                                backend->itens[i].valorCompreJa,
+                                backend->itens[i].duracao,
+                                backend->itens[i].sellerName,
+                                backend->itens[i].highestBidder);
+                        strcat(comunica.mensagem, aux);
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                {
+                    sprintf(comunica.mensagem, "%s Insira um valor maior\n", u.nome);
                 }
 
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                strcpy(comunica.mensagem, "");
                 close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
-                strcpy(comunica.mensagem, "Insira [lival] [valor]");
+                strcpy(comunica.mensagem, "Insira [lisel] [nomeVendedor]");
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
         }
         else if (strcmp(token, "litime") == 0)
         {
-            arg[1] = strtok(NULL, " \n");
+            
+             arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
+
+                bool flag = false;
+
                 for (int i = 0; i < backend->numItens; i++)
                 {
-                    comunica.itens[i] = backend->itens[i];
-                    write(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
+                    if (atoi(arg[1]) >= backend->itens[i].duracao)
+                    {
+                        sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                                backend->itens[i].idItem,
+                                backend->itens[i].nomeItem,
+                                backend->itens[i].categoria,
+                                backend->itens[i].valorAtual,
+                                backend->itens[i].valorCompreJa,
+                                backend->itens[i].duracao,
+                                backend->itens[i].sellerName,
+                                backend->itens[i].highestBidder);
+                        strcat(comunica.mensagem, aux);
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                {
+                    sprintf(comunica.mensagem, "%s Insira um valor maior\n", u.nome);
                 }
 
+                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                strcpy(comunica.mensagem, "");
                 close(utilizador_fd);
             }
             else
             {
                 printf("\n[AVISO]- %s enviou um comando incompleto\n", u.nome);
-                strcpy(comunica.mensagem, "Insira [litime] [tempo]");
+                strcpy(comunica.mensagem, "Insira [lisel] [nomeVendedor]");
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                 close(utilizador_fd);
             }
         }
         else if (strcmp(token, "time") == 0)
         {
-            comunica.timeBackend = backend->time;
-            write(utilizador_fd, &comunica.timeBackend, sizeof(comunica.timeBackend));
+
+            sprintf(comunica.mensagem, "Tempo do backend %d\n", backend->time);
+            write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
             close(utilizador_fd);
         }
         else if (strcmp(token, "buy") == 0)
@@ -1062,12 +1157,10 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 if (strcmp(u.nome, backend->utilizadores[i].nome) == 0)
                 {
-                    comunica.saldo = backend->utilizadores[i].saldo;
-                    write(utilizador_fd, &comunica.saldo, sizeof(comunica.saldo));
+                    sprintf(comunica.mensagem, "Saldo %d\n", backend->utilizadores[i].saldo);
+                    write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
-
-                // close(utilizador_fd);
             }
         }
         else if (strcmp(token, "add") == 0)

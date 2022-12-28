@@ -18,7 +18,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <stdbool.h>
-#define TAM 256
+#define TAM 6000
 #define BACKEND_FIFO "backend_fifo"
 #define SINAL_FIFO "sinal_fifo"
 #define SELLER_BUYER_FIFO "seller_buyer_fifo%d"

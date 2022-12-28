@@ -1,4 +1,5 @@
-1 pc informatica 10 0 540 joao -
-2 pc telemoveis 20 0 540 joao -
-3 pc informatica 30 0 540 joao mike
-4 dd dd 40 100 700 mike -
+1 pc informatica 40 0 434 joao -
+2 pc telemoveis 10 0 434 joao -
+3 pc consumiveis 50 0 434 gonzo -
+4 pc informatica 40 0 434 maximo -
+5 dd dd 20 100 594 mike -

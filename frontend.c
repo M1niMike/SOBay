@@ -99,14 +99,11 @@ int main(int argc, char **argv)
     char mensagem[TAM];
     int res;
     int reader = 0;
-    int maxItens = 30;
     pthread_t heartbeat_thread; // mandar o sinal para o backend
 
     USER user;
     ITEM item;
     COMUNICA comunica;
-
-    comunica.numItens = 0;
 
     int cont = 0;
 
@@ -116,8 +113,6 @@ int main(int argc, char **argv)
     signal(SIGQUIT, sigQuit_handler);
     signal(SIGTERM, sigTerm_handler);
     signal(SIGUSR2, sigUser2_handler);
-
-    comunica.itens = malloc(maxItens * sizeof(*comunica.itens)); // aloca espaço para itens no frontend (será que é a melhor implementação?)
 
     user.pid = getpid();
 
@@ -244,14 +239,13 @@ int main(int argc, char **argv)
 
                         if (strcmp(token, "time") == 0)
                         {
-                            read(utilizador_fd, &comunica.timeBackend, sizeof(comunica.timeBackend));
-                            printf("\nTempo da plataforma atual: (%d) segundos\n", comunica.timeBackend);
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            printf("%s\n", comunica.mensagem);
                         }
                         else if (strcmp(token, "cash") == 0)
                         {
-                            read(utilizador_fd, &comunica.saldo, sizeof(comunica.saldo));
-                            user.saldo = comunica.saldo;
-                            printf("\nSeu saldo atual: (%d)\n", user.saldo);
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            printf("%s\n", comunica.mensagem);
                         }
                         else if (strcmp(token, "add") == 0)
                         {
@@ -305,28 +299,8 @@ int main(int argc, char **argv)
                         }
                         else if (strcmp(token, "list") == 0)
                         {
-
-                            for (int i = 0; i < maxItens; i++)
-                            {
-                                read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
-                                if (comunica.itens[i].idItem != 0)
-                                {
-                                    printf("\n--------------------------------------\n");
-                                    printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                    printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                    printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                    printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                    printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                    printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                    printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                    printf("\nMaior licitador: %s\n", comunica.itens[i].highestBidder);
-                                    printf("\n--------------------------------------\n");
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            printf("\n%s\n", comunica.mensagem);
                         }
                         else if (strcmp(token, "lisel") == 0)
                         {
@@ -334,24 +308,8 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL)
                             {
-                                for (int i = 0; i < maxItens; i++)
-                                {
-                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
-
-                                    if (comunica.itens[i].idItem != 0 && strcmp(comunica.itens[i].sellerName, arg[1]) == 0)
-                                    {
-                                        printf("\n--------------------------------------\n");
-                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                        printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
-                                        printf("\n--------------------------------------\n");
-                                    }
-                                }
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
@@ -365,24 +323,8 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL)
                             {
-                                for (int i = 0; i < maxItens; i++)
-                                {
-                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
-
-                                    if (comunica.itens[i].idItem != 0 && strcmp(comunica.itens[i].categoria, arg[1]) == 0)
-                                    {
-                                        printf("\n--------------------------------------\n");
-                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                        printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
-                                        printf("\n--------------------------------------\n");
-                                    }
-                                }
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
@@ -396,25 +338,8 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL)
                             {
-                                for (int i = 0; i < maxItens; i++)
-                                {
-                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
-                                   
-                                    if (comunica.itens[i].idItem != 0 && comunica.itens[i].valorAtual <= atoi(arg[1]))
-                                    {
-                                        printf("\n--------------------------------------");
-                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                        printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
-                                        printf("\n--------------------------------------\n");
-                                        
-                                    }
-                                }
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
@@ -428,25 +353,8 @@ int main(int argc, char **argv)
 
                             if (arg[1] != NULL)
                             {
-                                for (int i = 0; i < maxItens; i++)
-                                {
-                                    read(utilizador_fd, &comunica.itens[i], sizeof(comunica.itens[i]));
-
-                                    if (comunica.itens[i].idItem != 0 && comunica.itens[i].duracao <= atoi(arg[1]))
-                                    {
-                                        printf("\n--------------------------------------");
-                                        printf("\nItem Id: %d", comunica.itens[i].idItem);
-                                        printf("\nNome item: %s", comunica.itens[i].nomeItem);
-                                        printf("\nNome do vendedor: %s", comunica.itens[i].sellerName);
-                                        printf("\nCategoria item: %s", comunica.itens[i].categoria);
-                                        printf("\nPreco item: %d", comunica.itens[i].valorAtual);
-                                        printf("\nPreco compre ja: %d", comunica.itens[i].valorCompreJa);
-                                        printf("\nDuracao: %d", comunica.itens[i].duracao);
-                                        printf("\nMaior licitador: %s", comunica.itens[i].highestBidder);
-                                        printf("\n--------------------------------------\n");
-                                    }
-                                    
-                                }
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                printf("\n%s\n", comunica.mensagem);
                             }
                             else
                             {
@@ -477,149 +385,3 @@ int main(int argc, char **argv)
     return 0;
 }
 
-/*OLD INTERFACE*/
-
-// void interface(USER user, ITEM item)
-// {
-
-//     char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
-//     char *arg[5];
-//     token = strtok(user.comando, " \n");
-
-//     while (token != NULL)
-//     {
-//         if (strcmp(token, "sell") == 0)
-//         {
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-//             arg[3] = strtok(NULL, " \n");
-//             arg[4] = strtok(NULL, " \n");
-//             arg[5] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
-//             }
-//         }
-//         else if (strcmp(token, "list") == 0)
-//         {
-//             printf("\nA ser implementado...\n");
-//         }
-//         else if (strcmp(token, "licat") == 0)
-//         {
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [licat nomeCategoria]\n");
-//             }
-//         }
-//         else if (strcmp(token, "lisel") == 0)
-//         {
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [lisel nomeVendedor]\n");
-//             }
-//         }
-//         else if (strcmp(token, "lival") == 0)
-//         {
-
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [lival precoMaximo]\n");
-//             }
-//         }
-//         else if (strcmp(token, "litime") == 0)
-//         {
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [litime prazo]\n");
-//             }
-//         }
-//         else if (strcmp(token, "time") == 0)
-//         {
-//             printf("\nA ser implementado...\n");
-//         }
-//         else if (strcmp(token, "buy") == 0)
-//         {
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-//             arg[3] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL)
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [buy id valor]\n");
-//             }
-//         }
-//         else if (strcmp(token, "cash") == 0)
-//         {
-//             printf("\nA ser implementado...\n");
-//         }
-//         else if (strcmp(token, "add") == 0)
-//         {
-
-//             arg[1] = strtok(NULL, " \n");
-//             arg[2] = strtok(NULL, " \n");
-
-//             if (arg[1] != NULL && arg[2])
-//             {
-//                 printf("\nA ser implementado...\n");
-//             }
-//             else
-//             {
-//                 printf("\nInsira apenas [add valor]\n");
-//             }
-//         }
-//         else if (strcmp(token, "exit") == 0)
-//         {
-//             sair();
-//         }
-//         else if (strcmp(token, "help") == 0)
-//         {
-//             help();
-//         }
-//         else if (strcmp(token, "clear") == 0)
-//         {
-//             clear();
-//         }
-//         else
-//         {
-//             printf("\nComando invalido!\n");
-//         }
-//         token = strtok(NULL, " ");
-//     }
-// }
