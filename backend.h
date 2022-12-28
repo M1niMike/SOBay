@@ -18,13 +18,12 @@
 #include <pthread.h>
 #include <time.h>
 #include <stdbool.h>
-#define TAM 256
+#define TAM 6000
 #define BACKEND_FIFO "backend_fifo"
 #define SINAL_FIFO "sinal_fifo"
 #define SELLER_BUYER_FIFO "seller_buyer_fifo%d"
 
 char SELLER_BUYER_FIFO_COM[TAM];
-
 
 // estrutura para definir os utilizadores (sejam compradores ou vendedores)
 typedef struct item{
@@ -36,6 +35,8 @@ typedef struct item{
     int valorCompreJa;
     char sellerName[TAM];
     char highestBidder[TAM];
+    int duracaoDesconto;
+    int savePrevValue;
 }ITEM, *ptritem;
 
 typedef struct user{
@@ -47,8 +48,15 @@ typedef struct user{
     int tempoLogged;
     char comando[TAM];
     char userStatus[TAM];
-    int test;
+    int timeBackend;
 }USER, *ptruser;
+
+typedef struct promotores{
+    char nome[TAM];
+    int contaPromotores;
+    pid_t pid;
+    char msg[TAM];
+}PROMOTORES, *ptrpromotores;
 
 typedef struct backend{
     int numItens;
@@ -57,7 +65,42 @@ typedef struct backend{
     int numPromoters;
     ptruser utilizadores;
     ptritem itens;
+    ptrpromotores promotores;
 }BACKEND, *ptrbackend;
+
+typedef struct comunica{
+    int timeBackend;
+    char mensagem[TAM];
+    char comando[TAM];
+    int saldo;
+    int retorno;
+    int numItens;
+    ptritem itens;
+}COMUNICA, *ptrcomunica;
+
+char* execPromotor(char* name);
+void readPromotersFile(ptrbackend backend);
+void encerra(ptrbackend backend, int numUsers, int numItens, ptritem itens);
+void leFicheiroVendas(ptrbackend backend);
+void adicionaPessoa(ptrbackend backend, USER u, int maxUsers);
+void resetDados(ptrbackend backend, ptruser user);
+void resetDadosItens(ptritem item);
+void removeItensFromArray(ptrbackend backend, int id);
+void removePessoaFromArray(ptrbackend backend, USER user);
+void *aumentaTempo(void *dados);
+void *aumentaTempoItem(void *dados);
+void resetUserTime(ptrbackend backend, int pid);
+void cmdListBackend(ptrbackend backend);
+void cmdKickBackend(ptrbackend backend, char *nome);
+void cmdUsersBackend(BACKEND backend);
+void interface(BACKEND backend, USER user, ITEM item);
+void cmdSell(char *nomeItem, char *categoria, int precoBase, int compreJa, int duracao, ptrbackend backend, USER user, int maxItens);
+void cmdBuy(USER user, int id, int valor, ptrbackend backend, ptrcomunica comunica);
+void cmdAdd(COMUNICA comunica, USER user, ptrbackend backend, int saldoToAdd);
+void giveMoneyToSeller(ptrbackend backend, int id);
+void giveMoneyToSellerCompreJa(ptrbackend backend, int id);
+void *promocoes(void *dados);
+void cmdCancelProm(ptrbackend backend, char *nomeProm);
 
 
 #endif //SO_BACKEND_H

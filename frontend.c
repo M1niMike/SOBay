@@ -17,7 +17,7 @@ void sigTerm_handler()
     exit(EXIT_SUCCESS);
 }
 
-void sigUser1_handler()
+void sigUser2_handler()
 {
     printf("\n[AVISO] - Foi kickado\n");
     unlink(SELLER_BUYER_FIFO_COM);
@@ -30,8 +30,8 @@ void *mandaSinal(void *dados)
 
     int pid = pdados->pid;
 
-    // setenv("HEARTBEAT", "20", 1);
-    int heartBeatTime = 20; // atoi(getenv("HEARTBEAT"));
+    int heartBeatTime = atoi(getenv("HEARTBEAT"));
+
     while (1)
     {
         sleep(heartBeatTime);
@@ -88,174 +88,47 @@ void clear()
     }
 }
 
-void interface(USER user, ITEM item)
-{
+// void *leNotif(void* dados){
+//     ptrcomunica comunica = (ptrcomunica) dados;
+//     USER u;
 
-    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
-    char *arg[5];
+//     while(1){
 
-    printf("%s", user.comando);
-    token = strtok(user.comando, " \n");
+//         notificacao_fd = open(NOTIFICACAO_FIFO, O_RDWR | O_NONBLOCK);
 
-    while (token != NULL)
-    {
-        if (strcmp(token, "sell") == 0)
-        {
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-            arg[3] = strtok(NULL, " \n");
-            arg[4] = strtok(NULL, " \n");
-            arg[5] = strtok(NULL, " \n");
+//         read(notificacao_fd, comunica->mensagem, sizeof(comunica->mensagem));
+//         printf("%s", comunica->mensagem);
 
-            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [sell nomeItem categoria precoBase precoCompreJa duracao]\n");
-            }
-        }
-        else if (strcmp(token, "list") == 0)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else if (strcmp(token, "licat") == 0)
-        {
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [licat nomeCategoria]\n");
-            }
-        }
-        else if (strcmp(token, "lisel") == 0)
-        {
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [lisel nomeVendedor]\n");
-            }
-        }
-        else if (strcmp(token, "lival") == 0)
-        {
-
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [lival precoMaximo]\n");
-            }
-        }
-        else if (strcmp(token, "litime") == 0)
-        {
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [litime prazo]\n");
-            }
-        }
-        else if (strcmp(token, "time") == 0)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else if (strcmp(token, "buy") == 0)
-        {
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-            arg[3] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL)
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [buy id valor]\n");
-            }
-        }
-        else if (strcmp(token, "cash") == 0)
-        {
-            printf("\nA ser implementado...\n");
-        }
-        else if (strcmp(token, "add") == 0)
-        {
-
-            arg[1] = strtok(NULL, " \n");
-            arg[2] = strtok(NULL, " \n");
-
-            if (arg[1] != NULL && arg[2])
-            {
-                printf("\nA ser implementado...\n");
-            }
-            else
-            {
-                printf("\nInsira apenas [add valor]\n");
-            }
-        }
-        else if (strcmp(token, "exit") == 0)
-        {
-            sair();
-        }
-        else if (strcmp(token, "help") == 0)
-        {
-            help();
-        }
-        else if (strcmp(token, "clear") == 0)
-        {
-            clear();
-        }
-        else
-        {
-            printf("\nComando invalido!\n");
-        }
-        token = strtok(NULL, " ");
-    }
-}
+//         close(notificacao_fd);
+//     }
+// }
 
 int main(int argc, char **argv)
 {
-    char password[50];
-    char username[50];
+    char password[TAM];
+    char username[TAM];
     fd_set read_fds;
     int nfd;           // para o return do select
     struct timeval tv; // timeout do selects
     fflush(stdout);
     char mensagem[TAM];
     int res;
+    int reader = 0;
     pthread_t heartbeat_thread; // mandar o sinal para o backend
+    // pthread_t readNotificacao;
 
     USER user;
     ITEM item;
+    COMUNICA comunica;
+
+    int cont = 0;
 
     user.isLoggedIn = 0;
     user.tempoLogged = 0;
 
     signal(SIGQUIT, sigQuit_handler);
     signal(SIGTERM, sigTerm_handler);
-    signal(SIGUSR1, sigUser1_handler);
+    signal(SIGUSR2, sigUser2_handler);
 
     user.pid = getpid();
 
@@ -267,7 +140,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR);
+    utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
 
     if (utilizador_fd == -1)
     {
@@ -306,18 +179,21 @@ int main(int argc, char **argv)
         // receber se o login correu bem ou nao
         if (pthread_create(&heartbeat_thread, NULL, &mandaSinal, &user) != 0)
         {
-            perror("\nErro na thread\n");
+            perror("\nErro na thread HEARTBEAT\n");
         }
+
+        // if (pthread_create(&readNotificacao, NULL, &leNotif, &user) != 0){
+        //     perror("\nErro na thread NOTIFICACAO\n");
+        // }
 
         while (1)
         {
-            tv.tv_sec = 5;  // segundos
+            tv.tv_sec = 20; // segundos
             tv.tv_usec = 0; // microsegundos. Isto significa que o timeout será de 50 segundos e 0 milisegundos. (50,0)
 
             FD_ZERO(&read_fds);               // inicializar o set
             FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
             FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
-
             // ir buscar o return do select e validar
 
             nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
@@ -328,43 +204,193 @@ int main(int argc, char **argv)
             }
             if (nfd == 0)
             {
-                printf("\nComando: ");
+                printf("\nEspera de comandos ou de resposta do backend\n");
             }
 
             // depois do return do select, verificar se os fd ainda estao dentro do set
 
             if (FD_ISSET(0, &read_fds)) // Teclado
             {
+                backend_fd = open(BACKEND_FIFO, O_WRONLY | O_NONBLOCK);
                 fgets(user.comando, sizeof(user.comando), stdin);
                 user.comando[strcspn(user.comando, "\n")] = 0;
-                interface(user, item);
                 write(backend_fd, &user, sizeof(user));
+
+                if (strcmp(user.comando, "exit") == 0)
+                {
+                    sair();
+                }
+
+                close(backend_fd);
             }
             if (FD_ISSET(utilizador_fd, &read_fds)) // user fd
             {
-
-                res = read(utilizador_fd, &user, sizeof(USER));
-
-                if (res < 0)
-                {
-                    perror("\nErro no read. No bytes ");
-                }
-
-                if (user.isLoggedIn == 0)
-                {
-                    printf("\nInsira outra vez o nome: ");
-                    fgets(user.nome, sizeof(user.nome), stdin);
-                    user.nome[strcspn(user.nome, "\n")] = 0;
-
-                    printf("\nInsira novamente a passe: ");
-                    fgets(user.pass, sizeof(user.pass), stdin);
-                    user.pass[strcspn(user.pass, "\n")] = 0;
-
-                    write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
-                }
-                else if (user.isLoggedIn == 1)
+                if (cont == 0)
                 {
                     printf("\nBem vindo [%s]\n", user.nome);
+                    read(utilizador_fd, &user, sizeof(user));
+
+                    if (user.isLoggedIn == 0)
+                    {
+                        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_RDWR | O_NONBLOCK);
+                        printf("\nInsira outra vez o nome: ");
+                        fgets(user.nome, sizeof(user.nome), stdin);
+                        user.nome[strcspn(user.nome, "\n")] = 0;
+
+                        printf("\nInsira novamente a passe: ");
+                        fgets(user.pass, sizeof(user.pass), stdin);
+                        user.pass[strcspn(user.pass, "\n")] = 0;
+
+                        write(backend_fd, &user, sizeof(user)); // volta a enviar os detalhes para o backend
+                    }
+                    cont = 1;
+                }
+                else if (cont == 1 && user.isLoggedIn == 1)
+                {
+                    close(backend_fd);
+
+                    char *token; // ler string até encontrar espaco e, por causa da ultima palavra, ate ao /n (porque nao tem espaco, tem /n)
+                    char *arg[5];
+                    token = strtok(user.comando, " \n");
+
+                    read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                    printf("%s\n", comunica.mensagem);
+
+                    while (token != NULL)
+                    {
+
+                        if (strcmp(token, "time") == 0)
+                        {
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            
+                        }
+                        else if (strcmp(token, "cash") == 0)
+                        {
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                           
+                        }
+                        else if (strcmp(token, "add") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                               
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                        }
+                        else if (strcmp(token, "buy") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+                            arg[2] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL && arg[2] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            
+                            }
+                        }
+                        else if (strcmp(token, "sell") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+                            arg[2] = strtok(NULL, " \n");
+                            arg[3] = strtok(NULL, " \n");
+                            arg[4] = strtok(NULL, " \n");
+                            arg[5] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                               
+                            }
+                        }
+                        else if (strcmp(token, "list") == 0)
+                        {
+                            read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                            
+                        }
+                        else if (strcmp(token, "lisel") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                               
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                        }
+                        else if (strcmp(token, "licat") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                        }
+                        else if (strcmp(token, "lival") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                        }
+                        else if (strcmp(token, "litime") == 0)
+                        {
+                            arg[1] = strtok(NULL, " \n");
+
+                            if (arg[1] != NULL)
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                                
+                            }
+                            else
+                            {
+                                read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                               
+                            }
+                        }
+                        else
+                        {
+                            printf("\nComando invalido! Tente novamente!\n");
+                        }
+
+                        token = strtok(NULL, " ");
+                    }
                 }
             }
         }

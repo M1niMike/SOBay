@@ -1,27 +1,34 @@
 SO:
 
-VERIFICA USER + LOGIN (DONE):
-	
-	1(DONE) - backend: Verificar se o user é valido.
-	2(DONE)  - backend: Fazer restrição se ele não for valido
-	3(DONE)- frontend: pedir login novamente
-	4(DONE) - frontend: enviar dados para o backend
-	5(DONE) - backend: verificar novamente.
-	
 
-Thread CORACAO BATIDA
+Tramento dos Comandos com outras structs:
+	1(Done) - Preparar o Frontend para ler outras structs
+	2(Done) - Fazer a logica dos comandos que tenham mais que um argumento
+	3(Done) - Receber o resultado no Frontend
+	4 - fazer para todos os comandos
+		4.2 - fazer comando reprom
 
-	1 -	Tratar da var do time (incrementar a cada segundo).
-	2 - criar a thread do coracao batida com as vars ambiente
-	3 - tratar do cmd time
-	4 - funcao para remover pessoa
-	
+
+Tramento das Notificações (fazer a thread dos promotores)
 
 
 
-	PARA MUDAR NA INTERFACE
+Notas de Correção:
+Promoções (corrigir a cena de decrementar o tempo e voltar ao valor original quando acaba)
+Promotores (Impedir de executar varios com o mesmo nome)
 
-	- Em vez de void, mudar o return type para char* 
-	- Na main, criar uma var aux para armazenar o cmd (char cmd[TAM];)
-	- igualar no FD_ISSET(0) (o do teclado) a variavel a chamada da funcao cmd = interface(...);
-	- chamar o write() para o backend com a informacao desse comando write(backend, &comando, sizeof(comando));
+
+
+
+
+
+Correção [MEGA STRETCH GOAL]
+corrigir verificao dos int e string no comando sell
+Corrigir o numUsers -> espaco de memoria
+Corrigir o numItens -> espaco de memoria
+Corrigir apenas faz venda se o seller estiver online
+
+
+
+LEMBRE-SE DE APAGAR O FICHEIRO KEKW
+
