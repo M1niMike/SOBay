@@ -2,7 +2,7 @@
 #include "backend.h"
 #include "users_lib.h"
 
-int utilizador_fd, sinais_fd, backend_fd;
+int utilizador_fd, sinal_fd, backend_fd, notificacao_fd;
 pid_t id = -1;
 char *FUSERS;
 char *FITEMS;
@@ -465,6 +465,7 @@ void *aumentaTempo(void *dados)
 void *aumentaTempoItem(void *dados)
 {
     ptrbackend backend = (ptrbackend)dados; // dizer ao void *dados que ele é do tipo backend para deposi conseguir aceder ao backend
+    COMUNICA comunica;
 
     while (1)
     {
@@ -479,12 +480,46 @@ void *aumentaTempoItem(void *dados)
                 {
                     if ((strcmp(backend->itens[i].highestBidder, "\0") == 0) || strcmp(backend->itens[i].highestBidder, "-") == 0) // sem um licitador
                     {
-                        removeItensFromArray(backend, backend->itens[i].idItem); // remove o item
+                        // remove o item
                         printf("\nNinguem licitou neste item.\n");
 
+                        for (int j = 0; j < backend->numUsers; j++)
+                        {
+                            sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[j].pid);
+                            utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
+
+                            sprintf(comunica.mensagem, "\nItem expirado!\nID: %d\nNome: %s\nCategoria: %s\nPrecoAtual: %d\nPor Vender\n",
+                                    backend->itens[i].idItem,
+                                    backend->itens[i].nomeItem,
+                                    backend->itens[i].categoria,
+                                    backend->itens[i].valorAtual,
+                                    backend->itens[i].valorCompreJa);
+
+                            write(utilizador_fd, comunica.mensagem, sizeof(comunica.mensagem));
+                            close(utilizador_fd);
+                        }
+
+                        removeItensFromArray(backend, backend->itens[i].idItem);
                         break;
                     }
+
                     printf("\n%s foi o maior licitador do item %s!\n", backend->itens[i].highestBidder, backend->itens[i].nomeItem);
+
+                    for (int j = 0; j < backend->numUsers; j++)
+                    {
+                        sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[j].pid);
+                        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
+
+                        sprintf(comunica.mensagem, "\nItem vendido!\nID: %d\nNome: %s\nCategoria: %s\nPrecoAtual: %d\nComprador %s\n",
+                                backend->itens[i].idItem,
+                                backend->itens[i].nomeItem,
+                                backend->itens[i].categoria,
+                                backend->itens[i].valorAtual,
+                                backend->itens[i].highestBidder);
+
+                        write(utilizador_fd, comunica.mensagem, sizeof(comunica.mensagem));
+                        close(utilizador_fd);
+                    }
 
                     for (int j = 0; j < backend->numUsers; j++) //
                     {
@@ -887,9 +922,25 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
             {
                 cmdSell(arg[1], arg[2], atoi(arg[3]), atoi(arg[4]), atoi(arg[5]), backend, u, 30);
-                strcpy(comunica.mensagem, "Item colocado a venda!");
-                write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                close(utilizador_fd);
+                
+               
+                    for (int j = 0; j < backend->numUsers; j++)
+                    {
+                        sprintf(SELLER_BUYER_FIFO_COM, SELLER_BUYER_FIFO, backend->utilizadores[j].pid);
+                        utilizador_fd = open(SELLER_BUYER_FIFO_COM, O_WRONLY | O_NONBLOCK);
+
+                        sprintf(comunica.mensagem, "\nItem colocado a venda por %s !\nID: %d\nNome: %s\nCategoria: %s\nPrecoAtual: %d\nPrecoCompreJa %d\n",
+                                u.nome,
+                                backend->itens[backend->numItens-1].idItem,
+                                backend->itens[backend->numItens-1].nomeItem,
+                                backend->itens[backend->numItens-1].categoria,
+                                backend->itens[backend->numItens-1].valorAtual,
+                                backend->itens[backend->numItens-1].valorCompreJa);
+
+                        write(utilizador_fd, comunica.mensagem, sizeof(comunica.mensagem));
+                        close(utilizador_fd);
+                    }
+                
             }
             else
             {
@@ -921,7 +972,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         }
         else if (strcmp(token, "licat") == 0)
         {
-             arg[1] = strtok(NULL, " \n");
+            arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
@@ -947,7 +998,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 }
                 if (!flag)
                 {
-                    sprintf(comunica.mensagem, "%s Insira uma categoria valida\n", u.nome);
+                    sprintf(comunica.mensagem, "\n%s - Insira uma categoria valida\n", u.nome);
                 }
 
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
@@ -990,7 +1041,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 }
                 if (!flag)
                 {
-                    sprintf(comunica.mensagem, "%s Insira um vendedor valido\n", u.nome);
+                    sprintf(comunica.mensagem, "\n%s - Insira um vendedor valido\n", u.nome);
                 }
 
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
@@ -1008,7 +1059,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         else if (strcmp(token, "lival") == 0)
         {
 
-             arg[1] = strtok(NULL, " \n");
+            arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
@@ -1034,7 +1085,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 }
                 if (!flag)
                 {
-                    sprintf(comunica.mensagem, "%s Insira um valor maior\n", u.nome);
+                    sprintf(comunica.mensagem, "\n%s - Insira um valor maior\n", u.nome);
                 }
 
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
@@ -1051,8 +1102,8 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         }
         else if (strcmp(token, "litime") == 0)
         {
-            
-             arg[1] = strtok(NULL, " \n");
+
+            arg[1] = strtok(NULL, " \n");
 
             if (arg[1] != NULL)
             {
@@ -1078,7 +1129,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                 }
                 if (!flag)
                 {
-                    sprintf(comunica.mensagem, "%s Insira um valor maior\n", u.nome);
+                    sprintf(comunica.mensagem, "\n%s - Insira um tempo maior\n", u.nome);
                 }
 
                 write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
@@ -1096,7 +1147,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
         else if (strcmp(token, "time") == 0)
         {
 
-            sprintf(comunica.mensagem, "Tempo do backend %d\n", backend->time);
+            sprintf(comunica.mensagem, "\nTempo do backend: [%d]\n", backend->time);
             write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
             close(utilizador_fd);
         }
@@ -1157,7 +1208,7 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
             {
                 if (strcmp(u.nome, backend->utilizadores[i].nome) == 0)
                 {
-                    sprintf(comunica.mensagem, "Saldo %d\n", backend->utilizadores[i].saldo);
+                    sprintf(comunica.mensagem, "\nSaldo: [%d]\n", backend->utilizadores[i].saldo);
                     write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
                     close(utilizador_fd);
                 }
@@ -1261,9 +1312,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    sinais_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
+    sinal_fd = open(SINAL_FIFO, O_RDWR | O_NONBLOCK);
 
-    if (sinais_fd == -1)
+    if (sinal_fd == -1)
     {
         perror("\n[ERRO] - Nao foi possivel abrir o fifo dos SINAIS!\n");
         return -1;
@@ -1301,9 +1352,9 @@ int main(int argc, char **argv)
         FD_ZERO(&read_fds);
         FD_SET(0, &read_fds);
         FD_SET(backend_fd, &read_fds);
-        FD_SET(sinais_fd, &read_fds);
+        FD_SET(sinal_fd, &read_fds);
 
-        int nfd = select(max(backend_fd, sinais_fd) + 1, &read_fds, NULL, NULL, &tv);
+        int nfd = select(max(backend_fd, sinal_fd) + 1, &read_fds, NULL, NULL, &tv);
 
         if (nfd == 0)
         {
@@ -1368,10 +1419,10 @@ int main(int argc, char **argv)
                 close(utilizador_fd);
             }
         }
-        if (FD_ISSET(sinais_fd, &read_fds))
+        if (FD_ISSET(sinal_fd, &read_fds))
         {
             int aux;
-            int size = read(sinais_fd, &aux, sizeof(aux));
+            int size = read(sinal_fd, &aux, sizeof(aux));
 
             if (size == sizeof(aux))
             {

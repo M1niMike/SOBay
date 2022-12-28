@@ -6,17 +6,17 @@ Tramento dos Comandos com outras structs:
 	2(Done) - Fazer a logica dos comandos que tenham mais que um argumento
 	3(Done) - Receber o resultado no Frontend
 	4 - fazer para todos os comandos
-		4.2 - fazer comando prom e suas derivações
+		4.2 - fazer comando reprom
 
 
-Tramento das Notificações (fazer a thread)
+Tramento das Notificações (fazer a thread dos promotores)
 
 
 
 Notas de Correção:
 Promoções (corrigir a cena de decrementar o tempo e voltar ao valor original quando acaba)
 Promotores (Impedir de executar varios com o mesmo nome)
-Dizer ao user que, se ele meter um valor demasiado baixo no lival e litime então printa que esse valor é demasiado baixo e que não há itens com esse valor 
+
 
 
 

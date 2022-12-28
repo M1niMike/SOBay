@@ -88,6 +88,21 @@ void clear()
     }
 }
 
+// void *leNotif(void* dados){
+//     ptrcomunica comunica = (ptrcomunica) dados;
+//     USER u;
+
+//     while(1){
+
+//         notificacao_fd = open(NOTIFICACAO_FIFO, O_RDWR | O_NONBLOCK);
+
+//         read(notificacao_fd, comunica->mensagem, sizeof(comunica->mensagem));
+//         printf("%s", comunica->mensagem);
+
+//         close(notificacao_fd);
+//     }
+// }
+
 int main(int argc, char **argv)
 {
     char password[TAM];
@@ -100,6 +115,7 @@ int main(int argc, char **argv)
     int res;
     int reader = 0;
     pthread_t heartbeat_thread; // mandar o sinal para o backend
+    // pthread_t readNotificacao;
 
     USER user;
     ITEM item;
@@ -163,8 +179,12 @@ int main(int argc, char **argv)
         // receber se o login correu bem ou nao
         if (pthread_create(&heartbeat_thread, NULL, &mandaSinal, &user) != 0)
         {
-            perror("\nErro na thread\n");
+            perror("\nErro na thread HEARTBEAT\n");
         }
+
+        // if (pthread_create(&readNotificacao, NULL, &leNotif, &user) != 0){
+        //     perror("\nErro na thread NOTIFICACAO\n");
+        // }
 
         while (1)
         {
@@ -174,7 +194,6 @@ int main(int argc, char **argv)
             FD_ZERO(&read_fds);               // inicializar o set
             FD_SET(0, &read_fds);             // adicionar o file descriptor do teclado (stdin) ao "set"
             FD_SET(utilizador_fd, &read_fds); // adicionar o utilizador_fd ao "set"
-
             // ir buscar o return do select e validar
 
             nfd = select(utilizador_fd + 1, &read_fds, NULL, NULL, &tv);
@@ -234,18 +253,21 @@ int main(int argc, char **argv)
                     char *arg[5];
                     token = strtok(user.comando, " \n");
 
+                    read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
+                    printf("%s\n", comunica.mensagem);
+
                     while (token != NULL)
                     {
 
                         if (strcmp(token, "time") == 0)
                         {
                             read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                            printf("%s\n", comunica.mensagem);
+                            
                         }
                         else if (strcmp(token, "cash") == 0)
                         {
                             read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                            printf("%s\n", comunica.mensagem);
+                           
                         }
                         else if (strcmp(token, "add") == 0)
                         {
@@ -254,12 +276,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                               
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                         }
                         else if (strcmp(token, "buy") == 0)
@@ -270,12 +292,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL && arg[2] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                            
                             }
                         }
                         else if (strcmp(token, "sell") == 0)
@@ -289,18 +311,18 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL && arg[2] != NULL && arg[3] != NULL && arg[4] != NULL && arg[5] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                               
                             }
                         }
                         else if (strcmp(token, "list") == 0)
                         {
                             read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                            printf("\n%s\n", comunica.mensagem);
+                            
                         }
                         else if (strcmp(token, "lisel") == 0)
                         {
@@ -309,12 +331,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                               
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                         }
                         else if (strcmp(token, "licat") == 0)
@@ -324,12 +346,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                         }
                         else if (strcmp(token, "lival") == 0)
@@ -339,12 +361,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                         }
                         else if (strcmp(token, "litime") == 0)
@@ -354,12 +376,12 @@ int main(int argc, char **argv)
                             if (arg[1] != NULL)
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                                
                             }
                             else
                             {
                                 read(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
-                                printf("\n%s\n", comunica.mensagem);
+                               
                             }
                         }
                         else
@@ -384,4 +406,3 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-

@@ -1,5 +1,6 @@
-1 pc informatica 40 0 434 joao -
-2 pc telemoveis 10 0 434 joao -
-3 pc consumiveis 50 0 434 gonzo -
-4 pc informatica 40 0 434 maximo -
-5 dd dd 20 100 594 mike -
+1 casa moradia 20 200 882 joao -
+2 casa dd 20 20 401 joao -
+3 xbox consola 20 500 919 joao -
+4 ps4 consola 20 500 946 joao -
+5 switch consola 20 500 972 joao -
+6 xbox videog 20 20 995 mike -
