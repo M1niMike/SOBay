@@ -2,7 +2,7 @@
 #include "backend.h"
 #include "users_lib.h"
 
-int utilizador_fd, sinal_fd, backend_fd, notificacao_fd;
+int utilizador_fd, sinal_fd, backend_fd;
 pid_t id = -1;
 char *FUSERS;
 char *FITEMS;
