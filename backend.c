@@ -819,7 +819,6 @@ void giveMoneyToSellerCompreJa(ptrbackend backend, int id)
     {
         for (int i = 0; i < backend->numItens; i++)
         {
-            printf("ITEM: %d\n", id);
             if (backend->itens[i].idItem == id)
             {
                 if (strcmp(backend->utilizadores[j].nome, backend->itens[i].sellerName) == 0)
@@ -1421,6 +1420,7 @@ int main(int argc, char **argv)
         }
         if (FD_ISSET(sinal_fd, &read_fds))
         {
+            
             int aux;
             int size = read(sinal_fd, &aux, sizeof(aux));
 

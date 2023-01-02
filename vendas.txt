@@ -1,6 +1,1 @@
-1 casa moradia 20 200 882 joao -
-2 casa dd 20 20 401 joao -
-3 xbox consola 20 500 919 joao -
-4 ps4 consola 20 500 946 joao -
-5 switch consola 20 500 972 joao -
-6 xbox videog 20 20 995 mike -
+1 casa moradia 20 200 647 joao -
