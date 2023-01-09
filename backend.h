@@ -48,7 +48,6 @@ typedef struct user{
     int tempoLogged;
     char comando[TAM];
     char userStatus[TAM];
-    int timeBackend;
 }USER, *ptruser;
 
 typedef struct promotores{

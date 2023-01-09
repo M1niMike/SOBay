@@ -954,7 +954,8 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
 
             for (int i = 0; i < backend->numItens; i++)
             {
-                sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
+                if(backend->itens[i].idItem != 0){
+                    sprintf(aux, "\nID: %d\nNome: %s\nCategoria: %s\nValorAtual: %d\nValorCompreJa: %d\nDuracao: %d\nVendedor: %s\nMaior Licitador: %s\n",
                         backend->itens[i].idItem,
                         backend->itens[i].nomeItem,
                         backend->itens[i].categoria,
@@ -963,7 +964,9 @@ void utilizadorCmd(ptrbackend backend, USER u, ITEM it, COMUNICA comunica)
                         backend->itens[i].duracao,
                         backend->itens[i].sellerName,
                         backend->itens[i].highestBidder);
-                strcat(comunica.mensagem, aux);
+                        strcat(comunica.mensagem, aux);
+                }
+                
             }
             write(utilizador_fd, &comunica.mensagem, sizeof(comunica.mensagem));
 
