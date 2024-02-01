@@ -1,6 +1,4 @@
-# SO-TP-22-23
-
-SOBay
+# SOBay
 
 Plataforma de gerência de Leilão em C - Unix.
 Trabalho Prático de Sistemas Operativos - 22/23 ISEC
